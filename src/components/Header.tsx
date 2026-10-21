@@ -62,57 +62,54 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Desktop Nav Links (Only when in landing view) */}
         {currentView === 'landing' && (
-          <nav className="hidden lg:flex items-center gap-5 xl:gap-7 text-sm font-semibold text-[#142032]">
+          <nav className="hidden lg:flex items-center gap-5 xl:gap-6 text-sm font-semibold text-[#142032]">
             <a href="#problem" className="hover:text-[#3d9970] transition-colors py-1">
-              {t.navWhyAudit}
+              Lösung
             </a>
             <a href="#funktion" className="hover:text-[#3d9970] transition-colors py-1">
-              {t.navWhatWeAudit}
-            </a>
-            <a href="#nutzen" className="hover:text-[#3d9970] transition-colors py-1">
-              {t.navBenefits}
+              Funktionen
             </a>
             <a href="#ablauf" className="hover:text-[#3d9970] transition-colors py-1">
-              {t.navProcess}
+              Ablauf
             </a>
-            <a href="#pricing" className="hover:text-[#3d9970] transition-colors py-1">
-              {t.navPricing}
+            <a href="#roi" className="hover:text-[#3d9970] transition-colors py-1">
+              ROI-Rechner
             </a>
-            <a href="#faq" className="hover:text-[#3d9970] transition-colors py-1">
-              {t.navFaq}
+            <a href="#pakete" className="hover:text-[#3d9970] transition-colors py-1">
+              Pakete
             </a>
             <a href="#kontakt" className="hover:text-[#3d9970] transition-colors py-1">
-              {t.navContact}
+              Kontakt
             </a>
           </nav>
         )}
 
         {/* Right Header Actions */}
         <div className="flex items-center gap-2 sm:gap-3 ms-auto">
-          {/* Sticky Phone Button */}
+          {/* Sticky Phone Button - High Contrast Emerald Pill with White Text */}
           <a
             href="tel:+41445897288"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#08271e] text-white text-xs md:text-sm font-bold shadow-sm hover:bg-[#123d2e] transition-all"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#3d9970] text-white font-extrabold text-xs md:text-sm shadow-md hover:bg-[#2f815f] transition-all border border-[#3d9970]"
             title="Call KlarSolution"
           >
-            <Phone className="w-3.5 h-3.5 text-[#3d9970]" />
+            <Phone className="w-3.5 h-3.5 text-white" />
             <span>044 589 72 88</span>
           </a>
 
-          {/* View Switcher: Landing vs Kundenbereich vs Admin Portal */}
+          {/* View Switcher: Landing vs Kundenbereich */}
           <button
             type="button"
             onClick={() =>
               onViewChange(currentView === 'landing' ? 'kundenbereich' : 'landing')
             }
-            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs md:text-sm font-bold transition-all shadow-sm ${
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition-all shadow-md ${
               currentView === 'landing'
-                ? 'bg-[#3d9970] hover:bg-[#2f8a68] text-white'
-                : 'bg-[#142032] hover:bg-[#08271e] text-white'
+                ? 'bg-[#08271e] hover:bg-[#123d2e] text-white border border-white/20'
+                : 'bg-[#3d9970] hover:bg-[#2f815f] text-white'
             }`}
           >
-            <LayoutDashboard className="w-4 h-4" />
-            <span>{currentView === 'landing' ? 'Kundenbereich' : 'Website'}</span>
+            <LayoutDashboard className="w-4 h-4 text-[#86c8aa]" />
+            <span>{currentView === 'landing' ? 'Kundenbereich / Live-Dashboard →' : '← Zurück zur Website'}</span>
           </button>
 
           {/* Request Audit Quote Button (Landing mode) */}

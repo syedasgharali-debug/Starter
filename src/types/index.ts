@@ -17,6 +17,8 @@ export type InvoiceStatus = 'discrepancy' | 'approved' | 'duplicate' | 'processi
 
 export type UserRole = 'Super Admin' | 'Lead Auditor' | 'Finance Manager' | 'ERP Specialist';
 
+export type OperationalRole = 'Administrator' | 'Controller' | 'Buchhalter' | 'Freigeber' | 'Auditor';
+
 export interface MultiTenantClient {
   id: string;
   companyName: string;

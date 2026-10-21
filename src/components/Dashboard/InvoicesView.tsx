@@ -497,9 +497,43 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
               </div>
             </div>
 
+            {/* 3-Way Reconciliation Cards Side-By-Side */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-sm text-[#142032] flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[#3d9970]" />
+                <span>3-Wege-Abgleich (Rechnung vs. Bestellung vs. Lieferschein)</span>
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                {/* Card 1: Invoice */}
+                <div className="bg-[#f7f9f8] p-3.5 rounded-2xl border border-gray-200">
+                  <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">1. Eingangsrechnung</div>
+                  <div className="font-bold text-[#142032]">{selectedInvoice.invoiceNumber}</div>
+                  <div className="text-gray-500 font-mono mt-1">CHF {selectedInvoice.totalBilledCHF.toLocaleString()}</div>
+                  <div className="text-[11px] text-gray-500 mt-0.5">Datum: {selectedInvoice.invoiceDate}</div>
+                </div>
+
+                {/* Card 2: Purchase Order */}
+                <div className="bg-[#f7f9f8] p-3.5 rounded-2xl border border-gray-200">
+                  <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">2. ERP Bestellung (PO)</div>
+                  <div className="font-bold text-[#142032]">{selectedInvoice.poNumber}</div>
+                  <div className="text-gray-500 font-mono mt-1">CHF {selectedInvoice.totalPOCHF.toLocaleString()}</div>
+                  <div className="text-[11px] text-gray-500 mt-0.5">Soll-Satz: Rahmenvertrag</div>
+                </div>
+
+                {/* Card 3: Delivery Receipt */}
+                <div className="bg-[#f7f9f8] p-3.5 rounded-2xl border border-gray-200">
+                  <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">3. Lieferschein Wareneingang</div>
+                  <div className="font-bold text-[#142032]">LS-{selectedInvoice.poNumber.replace('PO-', '')}</div>
+                  <div className="text-emerald-700 font-semibold mt-1">✓ Eingang quittiert</div>
+                  <div className="text-[11px] text-gray-500 mt-0.5">Qualität: Bestanden</div>
+                </div>
+              </div>
+            </div>
+
             {/* Line Items Comparison */}
             <div className="space-y-3">
-              <h3 className="font-bold text-sm text-[#142032]">Zeilenweiser Belegabgleich (PO vs Rechnung)</h3>
+              <h3 className="font-bold text-sm text-[#142032]">Zeilenweiser Belegabgleich</h3>
               <div className="border border-gray-200 rounded-2xl overflow-hidden">
                 <table className="w-full text-left ltr:text-left rtl:text-right text-xs">
                   <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-bold">
@@ -532,7 +566,7 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
             {selectedInvoice.disputeLetter && (
               <div className="space-y-3 pt-2">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-sm text-[#142032]">Vorlage für Lieferanten-Reklamation</h3>
+                  <h3 className="font-bold text-sm text-[#142032]">Vorlage für Lieferanten-Reklamation (OR Art. 82/107)</h3>
                   <button
                     type="button"
                     onClick={() => handleCopyLetter(selectedInvoice.disputeLetter)}
@@ -544,12 +578,54 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
                 </div>
                 <textarea
                   readOnly
-                  rows={5}
+                  rows={4}
                   value={selectedInvoice.disputeLetter}
                   className="w-full p-3.5 rounded-2xl border border-gray-300 text-xs font-mono bg-gray-50 text-gray-800"
                 />
               </div>
             )}
+
+            {/* Action Buttons Toolbar: Freigeben, Rückfrage, Zahlung stoppen */}
+            <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  showToast(`Zahlungsstopp aktiviert für ${selectedInvoice.invoiceNumber}. ERP per API benachrichtigt.`);
+                  setSelectedInvoice(null);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
+              >
+                <XCircle className="w-4 h-4" />
+                <span>Zahlung stoppen</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleCopyLetter(
+                    selectedInvoice.disputeLetter ||
+                      `Sehr geehrte Damen und Herren,\n\nzur Rechnung ${selectedInvoice.invoiceNumber} bitten wir um Stornierung/Gutsagung der Abweichung von CHF ${selectedInvoice.varianceCHF}.\n\nKlarSolution Audit`
+                  );
+                  showToast(`Reklamationsschreiben für ${selectedInvoice.invoiceNumber} in Zwischenablage kopiert.`);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
+              >
+                <AlertTriangle className="w-4 h-4" />
+                <span>Rückfrage an Lieferant</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  showToast(`Rechnung ${selectedInvoice.invoiceNumber} wurde manuell freigegeben.`);
+                  setSelectedInvoice(null);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-[#3d9970] hover:bg-[#2f8a68] text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Freigeben</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Language, DashboardView, AppView } from '../../types';
+import React, { useState } from 'react';
+import { Language, DashboardView, AppView, OperationalRole } from '../../types';
 import { translations } from '../../translations/translations';
 import {
   LayoutDashboard,
@@ -14,6 +14,7 @@ import {
   Search,
   ShieldCheck,
   Lock,
+  UserCheck,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -24,6 +25,14 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+const roleBadges: Record<OperationalRole, string> = {
+  Administrator: 'Vollzugriff & Freigabe',
+  Controller: 'Finanzkontrolle & Export',
+  Buchhalter: 'Belegerfassung & Buchung',
+  Freigeber: 'Zahlungsfreigabe (bis CHF 100k)',
+  Auditor: 'Revision & Audit-Trail',
+};
+
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   currentLang,
   activeView,
@@ -32,6 +41,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
 }) => {
   const t = translations[currentLang];
+  const [activeRole, setActiveRole] = useState<OperationalRole>('Administrator');
 
   const menuItems: { id: DashboardView; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: t.dashTabOverview, icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -70,14 +80,60 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
         </div>
 
-        {/* User & Org info */}
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={onBackToLanding}
+            className="px-3.5 py-2 rounded-xl bg-[#3d9970] hover:bg-[#2f8a68] text-white transition-all flex items-center gap-1.5 text-xs font-extrabold shadow-md border border-[#3d9970]"
+            title="Zurück zur Website"
+          >
+            <ArrowLeft className="w-4 h-4 text-white" />
+            <span>{t.backToLanding || '← Zurück zur Website'}</span>
+          </button>
+
+          <div className="h-6 w-px bg-white/20 hidden sm:block" />
+
+          <div className="flex items-center gap-2">
+            <span className="font-serif font-extrabold text-lg text-white">
+              klar <span className="text-[#3d9970]">solution</span>
+            </span>
+            <span className="hidden md:inline-block px-2.5 py-0.5 rounded-full bg-[#3d9970]/30 text-[#86c8aa] text-[10px] font-extrabold uppercase border border-[#3d9970]/40">
+              Kundenbereich
+            </span>
+          </div>
+        </div>
+
+        {/* User & Org info + 5-Role Switcher */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl text-xs">
+          {/* Organization Badge */}
+          <div className="hidden sm:flex items-center gap-2 bg-white/10 border border-white/15 px-3 py-1.5 rounded-xl text-xs">
             <Building className="w-3.5 h-3.5 text-[#86c8aa]" />
-            <span className="font-bold text-gray-200">Bauwerk Alpine AG</span>
-            <span className="text-[10px] text-[#86c8aa] bg-[#3d9970]/30 px-1.5 py-0.5 rounded font-mono">
+            <span className="font-bold text-white">KlarSolution – Smart Grid AG</span>
+            <span className="text-[10px] text-[#86c8aa] bg-[#3d9970]/40 px-1.5 py-0.5 rounded font-mono font-bold">
               Enterprise
             </span>
+          </div>
+
+          {/* 5-Role Switcher Dropdown */}
+          <div className="flex items-center gap-2 bg-white/10 border border-white/15 px-2.5 py-1.5 rounded-xl text-xs">
+            <UserCheck className="w-3.5 h-3.5 text-[#86c8aa]" />
+            <select
+              value={activeRole}
+              onChange={(e) => setActiveRole(e.target.value as OperationalRole)}
+              className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer pr-1 [&>option]:bg-[#08271e] [&>option]:text-white"
+            >
+              <option value="Administrator">Administrator</option>
+              <option value="Controller">Controller</option>
+              <option value="Buchhalter">Buchhalter</option>
+              <option value="Freigeber">Freigeber</option>
+              <option value="Auditor">Auditor</option>
+            </select>
+          </div>
+
+          {/* Active Permission Badge */}
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#3d9970]/20 border border-[#3d9970]/40 text-[#86c8aa] text-[11px] font-bold">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#86c8aa]" />
+            <span>{roleBadges[activeRole]}</span>
           </div>
 
           <button
@@ -91,15 +147,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           >
             <ShieldCheck className="w-3.5 h-3.5 text-[#86c8aa]" />
             <span className="hidden md:inline">{t.dashTabAdmin || 'Admin Portal'}</span>
-          </button>
-
-          <button
-            type="button"
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 relative"
-            aria-label="Notifications"
-          >
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[#df6029] rounded-full" />
           </button>
         </div>
       </header>

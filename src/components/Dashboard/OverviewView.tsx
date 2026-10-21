@@ -126,22 +126,22 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         </div>
       </div>
 
-      {/* 4 KPI Cards with Integrated Recharts Sparklines */}
+      {/* 4 Operational KPI Cards with Integrated Recharts Sparklines */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* KPI 1: Audit Volume + 30-Day Sparkline */}
+        {/* KPI 1: Geprüfte Rechnungen + 30-Day Sparkline */}
         <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between space-y-3 relative overflow-hidden group hover:border-[#3d9970]/50 transition-all">
           <div className="space-y-2">
             <div className="flex justify-between items-center text-gray-500">
-              <span className="text-xs font-bold uppercase tracking-wider">{t.dashTotalAudited}</span>
+              <span className="text-xs font-bold uppercase tracking-wider">Geprüfte Rechnungen</span>
               <div className="p-2 bg-[#eef8f3] text-[#3d9970] rounded-lg">
                 <FileCheck2 className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-2xl font-serif font-extrabold text-[#142032]">{totalAudited} Belege</div>
+            <div className="text-2xl font-serif font-extrabold text-[#142032]">384 Belege</div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-emerald-600 font-bold flex items-center gap-1">
                 <TrendingUp className="w-3.5 h-3.5" />
-                <span>+28% (30 Tage)</span>
+                <span>+28% MTD</span>
               </span>
               <span className="text-gray-400 font-mono text-[10px]">30-Tage Trend</span>
             </div>
@@ -171,22 +171,22 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </div>
         </div>
 
-        {/* KPI 2: Recovered Losses + 30-Day Sparkline */}
+        {/* KPI 2: Erkannte Abweichungen + 30-Day Sparkline */}
         <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between space-y-3 relative overflow-hidden group hover:border-[#3d9970]/50 transition-all">
           <div className="space-y-2">
             <div className="flex justify-between items-center text-gray-500">
-              <span className="text-xs font-bold uppercase tracking-wider">{t.dashRecoveredLosses}</span>
-              <div className="p-2 bg-[#eef8f3] text-[#3d9970] rounded-lg">
-                <TrendingDown className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Erkannte Abweichungen</span>
+              <div className="p-2 bg-[#fff3e6] text-[#df6029] rounded-lg">
+                <AlertTriangle className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-2xl font-serif font-extrabold text-[#3d9970] font-mono">
-              CHF {totalOverchargesRecovered.toLocaleString()}
+            <div className="text-2xl font-serif font-extrabold text-[#df6029] font-mono">
+              CHF 14'250
             </div>
             <div className="flex items-center justify-between text-[11px]">
-              <span className="text-emerald-600 font-bold flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Rückforderung aktiv</span>
+              <span className="text-[#df6029] font-bold flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>4 offene Fälle</span>
               </span>
               <span className="text-gray-400 font-mono text-[10px]">30-Tage Trend</span>
             </div>
@@ -216,41 +216,43 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </div>
         </div>
 
-        {/* KPI 3: Active Discrepancies */}
+        {/* KPI 3: Verifizierte Zahlungen */}
         <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between space-y-3">
           <div className="space-y-2">
             <div className="flex justify-between items-center text-gray-500">
-              <span className="text-xs font-bold uppercase tracking-wider">{t.dashActiveDiscrepancies}</span>
-              <div className="p-2 bg-[#fff3e6] text-[#df6029] rounded-lg">
-                <AlertTriangle className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Verifizierte Zahlungen</span>
+              <div className="p-2 bg-[#eef8f3] text-[#3d9970] rounded-lg">
+                <CheckCircle2 className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-2xl font-serif font-extrabold text-[#df6029]">{activeDiscrepanciesCount} Cases</div>
-            <span className="text-[11px] text-[#df6029] font-semibold block">⚠ Handlungsbedarf erforderlich</span>
+            <div className="text-2xl font-serif font-extrabold text-[#3d9970] font-mono">
+              CHF 182'400
+            </div>
+            <span className="text-[11px] text-[#3d9970] font-semibold block">✓ 3-Wege-Abgleich bestanden</span>
           </div>
 
           <div className="pt-2 text-[11px] text-gray-500 border-t border-gray-100 flex justify-between items-center">
-            <span>Lieferanten-Reklamationen</span>
-            <span className="font-bold text-[#df6029]">Offen</span>
+            <span>Freigegeben zur Zahlung</span>
+            <span className="font-bold text-[#3d9970]">100% Konform</span>
           </div>
         </div>
 
-        {/* KPI 4: Swiss Audit Standard Accuracy */}
+        {/* KPI 4: Revisionsstatus */}
         <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between space-y-3">
           <div className="space-y-2">
             <div className="flex justify-between items-center text-gray-500">
-              <span className="text-xs font-bold uppercase tracking-wider">{t.dashAuditEfficiency}</span>
+              <span className="text-xs font-bold uppercase tracking-wider">Revisionsstatus</span>
               <div className="p-2 bg-[#eef8f3] text-[#3d9970] rounded-lg">
-                <Award className="w-4 h-4" />
+                <ShieldCheck className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-2xl font-serif font-extrabold text-[#142032]">{auditAccuracyPct}%</div>
-            <span className="text-[11px] text-emerald-600 font-semibold block">Swiss Audit Standard Compliance</span>
+            <div className="text-2xl font-serif font-extrabold text-[#142032]">100% DSGVO</div>
+            <span className="text-[11px] text-emerald-600 font-semibold block">Revisionssicher & Geobeschränkt</span>
           </div>
 
           <div className="pt-2 text-[11px] text-gray-500 border-t border-gray-100 flex justify-between items-center">
-            <span>KI-Konfidenzschnitt</span>
-            <span className="font-bold text-[#3d9970]">Exzellent</span>
+            <span>Schweizer Rechenzentrum</span>
+            <span className="font-bold text-[#3d9970]">ISO 27001</span>
           </div>
         </div>
       </div>

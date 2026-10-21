@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Language, InvoiceRecord } from '../../types';
 import { translations } from '../../translations/translations';
 import {
@@ -27,6 +27,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   onAddAuditedInvoice,
 }) => {
   const t = translations[currentLang];
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const samplePresets = [
     {
@@ -81,12 +82,13 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   const [scanResult, setScanResult] = useState<any | null>(null);
   const [copied, setCopied] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
 
   const scanSteps = [
-    { num: 1, title: '1. OCR Beleg-Texterfassung', desc: 'Extrahiere Kopfdaten, Beträge & Einzelpositionen...' },
-    { num: 2, title: '2. ERP Bestellungs-Abgleich (PO Match)', desc: 'Gleiche Preise und Konditionen mit SAP/Abacus PO ab...' },
-    { num: 3, title: '3. Historische Duplikatsprüfung', desc: 'Durchsuche Archiv auf doppelt eingereichte Rechnungen...' },
-    { num: 4, title: '4. KI-Abweichungserkennung', desc: 'Berechne Gesamtdifferenz & erstelle Reklamationsentwurf...' },
+    { num: 1, title: '1. OCR-Texterkennung', desc: 'Extrahiere Beleg-Kopfdaten, Beträge & Einzelpositionen...' },
+    { num: 2, title: '2. Claude 3.5 Sonnet Extraktion', desc: 'Semantische Validierung & Strukturierung der Belege...' },
+    { num: 3, title: '3. 3-Wege-Abgleich (Rechnung vs. PO vs. Lieferschein)', desc: 'Gleiche Preise und Mengen mit ERP-Bestellung & Lieferschein ab...' },
+    { num: 4, title: '4. KI-Abweichungserkennung & Reklamation', desc: 'Berechne Gesamtdifferenz & erstelle Reklamationsentwurf...' },
   ];
 
   const handleSelectPreset = (idx: number) => {
@@ -101,12 +103,16 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     setScanResult(null);
   };
 
-  const handleRun4StepSimulation = (presetIdx: number = selectedPresetIndex) => {
+  const handleRun4StepSimulation = (
+    customFileName?: string,
+    presetIdx: number = selectedPresetIndex
+  ) => {
     setScanning(true);
     setScanResult(null);
     setScanStep(1);
 
     const preset = samplePresets[presetIdx];
+    const fileName = customFileName || `Rechnung_${preset.invoiceNumber}.pdf`;
 
     setTimeout(() => setScanStep(2), 700);
     setTimeout(() => setScanStep(3), 1400);
@@ -120,9 +126,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
         discrepancyFound: true,
         discrepancyType: preset.discrepancyType,
         confidenceScorePct: 99,
-        summary: `Echtzeit-Scan abgeschlossen: ${preset.supplier} (Rechnung ${preset.invoiceNumber}). ${preset.itemsText}`,
+        summary: `Echtzeit-Scan abgeschlossen (${fileName}): ${preset.supplier} (Rechnung ${preset.invoiceNumber}). ${preset.itemsText}`,
         overchargeAmountCHF: preset.varianceCHF,
-        disputeLetterTemplate: `Sehr geehrte Damen und Herren,\n\nbei der Belegprüfung unserer Lieferantenrechnung ${preset.invoiceNumber} (PO ${preset.poNumber}) wurde eine erhebliche Abweichung festgestellt.\n\nDetailbefund:\n${preset.itemsText}\n\nGemäss Schweizer Obligationenrecht (OR Art. 82 / 107) fordern wir Sie auf, uns innert 10 Tagen eine entsprechende Gutschrift über CHF ${preset.varianceCHF.toFixed(2)} einzureichen.\n\nFreundliche Grüsse,\nBauwerk Alpine AG / KlarSolution Revisionsleitung`,
+        disputeLetterTemplate: `Sehr geehrte Damen und Herren,\n\nbei der Belegprüfung unserer Lieferantenrechnung ${preset.invoiceNumber} (PO ${preset.poNumber}) wurde eine erhebliche Abweichung festgestellt.\n\nDetailbefund:\n${preset.itemsText}\n\nGemäss Schweizer Obligationenrecht (OR Art. 82 / 107) fordern wir Sie auf, uns innert 10 Tagen eine entsprechende Gutschrift über CHF ${preset.varianceCHF.toFixed(2)} einzureichen.\n\nFreundliche Grüsse,\nSmart Grid AG / KlarSolution Revisionsleitung`,
       };
 
       setScanResult(createdAuditResult);
@@ -160,8 +166,29 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     }, 2800);
   };
 
+  const handleDropzoneClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setUploadedFileName(file.name);
+      handleRun4StepSimulation(file.name, 0);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-fadeIn text-[#142032]">
+      {/* Hidden File Input for Native Dialog */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileInputChange}
+        accept=".pdf,.png,.jpg,.jpeg,.tiff"
+        className="hidden"
+      />
+
       {/* Header */}
       <div className="border-b border-gray-200 pb-5">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#eef8f3] text-[#3d9970] text-xs font-bold mb-2">
@@ -170,7 +197,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
         </div>
         <h1 className="text-2xl font-serif font-bold text-[#142032]">Beleg-Upload & Live Scan</h1>
         <p className="text-xs text-gray-500 mt-1">
-          Laden Sie Belege hoch oder starten Sie das Test-Paket für eine automatische 4-Stufen-Analyse (OCR, PO-Match, Duplikatsprüfung, Differenzberechnung).
+          Laden Sie Belege hoch oder starten Sie das Test-Paket für eine automatische 4-Stufen-Analyse (1. OCR-Texterkennung → 2. Claude 3.5 Extraktion → 3. 3-Wege-Abgleich → 4. KI-Abweichungserkennung).
         </p>
       </div>
 
@@ -178,6 +205,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Dropzone */}
         <div
+          onClick={handleDropzoneClick}
           onDragOver={(e) => {
             e.preventDefault();
             setDragActive(true);
@@ -186,22 +214,33 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
           onDrop={(e) => {
             e.preventDefault();
             setDragActive(false);
-            handleRun4StepSimulation(0);
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              const file = e.dataTransfer.files[0];
+              setUploadedFileName(file.name);
+              handleRun4StepSimulation(file.name, 0);
+            } else {
+              handleRun4StepSimulation('Uploaded_Invoice.pdf', 0);
+            }
           }}
           className={`md:col-span-2 border-2 border-dashed rounded-3xl p-8 text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
             dragActive
-              ? 'border-[#3d9970] bg-[#eef8f3]'
+              ? 'border-[#3d9970] bg-[#eef8f3] scale-[1.01]'
               : 'border-gray-300 bg-white hover:border-[#3d9970] hover:bg-gray-50/50'
           }`}
         >
-          <div className="w-14 h-14 rounded-2xl bg-[#08271e] text-white flex items-center justify-center mb-3 shadow-md">
+          <div className="w-14 h-14 rounded-2xl bg-[#08271e] text-white flex items-center justify-center mb-3 shadow-md group-hover:scale-105 transition-transform">
             <Upload className="w-7 h-7 text-[#3d9970]" />
           </div>
           <h3 className="font-extrabold text-sm text-[#142032] mb-1">
-            Rechnungen hier hineinziehen (PDF, PNG, TIFF)
+            Rechnungen hier hineinziehen oder klicken (PDF, PNG, JPG)
           </h3>
           <p className="text-xs text-gray-500 max-w-sm">
-            Unterstützt Mehrseiten-PDFs & Einzelbelege. Automatische Erkennung Schweizer QR-Rechnungen.
+            Klicken Sie hier, um Dateien auszuwählen, oder ziehen Sie Belege direkt hinein.
+            {uploadedFileName && (
+              <span className="block mt-2 font-bold text-[#3d9970]">
+                Zuletzt geladen: {uploadedFileName}
+              </span>
+            )}
           </p>
         </div>
 
@@ -221,7 +260,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
           <button
             type="button"
             disabled={scanning}
-            onClick={() => handleRun4StepSimulation(0)}
+            onClick={() => handleRun4StepSimulation()}
             className="w-full mt-4 py-3.5 rounded-2xl bg-[#3d9970] hover:bg-[#2f8a68] text-white font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {scanning ? (

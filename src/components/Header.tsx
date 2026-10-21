@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Language, AppView } from '../types';
+import { Language, AppView, OperationalRole } from '../types';
 import { translations } from '../translations/translations';
-import { Phone, LayoutDashboard, Globe, Menu, X, ArrowUpRight } from 'lucide-react';
+import { Phone, LayoutDashboard, Globe, Menu, X, ArrowUpRight, LogIn, LogOut, User } from 'lucide-react';
 
 interface HeaderProps {
   currentLang: Language;
@@ -9,6 +9,13 @@ interface HeaderProps {
   currentView: AppView;
   onViewChange: (view: AppView) => void;
   onRequestQuote: () => void;
+  isAuthenticated: boolean;
+  userName: string;
+  userEmail: string;
+  userRole: OperationalRole;
+  userAvatarUrl?: string;
+  onOpenAuthModal: () => void;
+  onSignOut: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,9 +24,17 @@ export const Header: React.FC<HeaderProps> = ({
   currentView,
   onViewChange,
   onRequestQuote,
+  isAuthenticated,
+  userName,
+  userEmail,
+  userRole,
+  userAvatarUrl,
+  onOpenAuthModal,
+  onSignOut,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const t = translations[currentLang];
 
   const languages: { code: Language; label: string; flag: string }[] = [
@@ -35,10 +50,18 @@ export const Header: React.FC<HeaderProps> = ({
     setLangDropdownOpen(false);
   };
 
+  const handleDashboardClick = () => {
+    if (isAuthenticated) {
+      onViewChange('kundenbereich');
+    } else {
+      onOpenAuthModal();
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 min-h-[84px] md:min-h-[92px] bg-white/95 backdrop-blur-md border-b border-[#e7ecea] shadow-sm transition-all">
       <div className="max-w-[1280px] mx-auto min-h-[84px] md:min-h-[92px] px-3 sm:px-6 flex items-center justify-between gap-2 md:gap-4">
-        {/* Brand Logo */}
+        {/* Unified Brand Logo Badge Across Landing & Dashboard */}
         <a
           href="#top"
           onClick={(e) => {
@@ -51,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
           aria-label="klar solution homepage"
         >
           <div className="flex flex-col text-center leading-tight">
-            <span className="font-extrabold tracking-tight text-lg md:text-xl text-white font-sans">
+            <span className="font-serif font-extrabold tracking-tight text-lg md:text-xl text-white font-sans">
               klar <span className="text-[#3d9970]">solution</span>
             </span>
             <span className="text-[9px] uppercase tracking-widest text-[#a8cfbd] font-medium">
@@ -86,43 +109,93 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Header Actions */}
         <div className="flex items-center gap-2 sm:gap-3 ms-auto">
-          {/* Sticky Phone Button - High Contrast Emerald Pill with White Text */}
+          {/* High-Contrast Phone Pill (White text on Emerald) */}
           <a
             href="tel:+41445897288"
             className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#3d9970] text-white font-extrabold text-xs md:text-sm shadow-md hover:bg-[#2f815f] transition-all border border-[#3d9970]"
-            title="Call KlarSolution"
+            title="Telefon KlarSolution"
           >
             <Phone className="w-3.5 h-3.5 text-white" />
             <span>044 589 72 88</span>
           </a>
 
-          {/* View Switcher: Landing vs Kundenbereich */}
+          {/* Action 1: "Anmelden" Login Button (or Authenticated User Profile) */}
+          {!isAuthenticated ? (
+            <button
+              type="button"
+              onClick={onOpenAuthModal}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-gray-50 text-gray-800 font-extrabold text-xs md:text-sm border border-gray-300 shadow-sm transition-all"
+            >
+              <LogIn className="w-4 h-4 text-[#3d9970]" />
+              <span>Anmelden</span>
+            </button>
+          ) : (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-2xl bg-[#eef8f3] hover:bg-[#d5ebe0] text-[#142032] border border-[#3d9970]/30 transition-all shadow-sm"
+              >
+                {userAvatarUrl ? (
+                  <img
+                    src={userAvatarUrl}
+                    alt={userName}
+                    className="w-6 h-6 rounded-full object-cover border border-[#3d9970]"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-[#3d9970] text-white flex items-center justify-center font-bold text-xs">
+                    {userName.charAt(0)}
+                  </div>
+                )}
+                <div className="hidden sm:flex flex-col text-left leading-tight">
+                  <span className="font-extrabold text-xs text-[#142032]">{userName}</span>
+                  <span className="text-[10px] text-[#2d5c46] font-semibold">{userRole}</span>
+                </div>
+              </button>
+
+              {profileDropdownOpen && (
+                <div className="absolute right-0 ltr:right-0 rtl:left-0 mt-2 w-56 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 p-3 space-y-2 animate-fadeIn">
+                  <div className="border-b border-gray-100 pb-2">
+                    <strong className="block text-xs font-bold text-[#142032]">{userName}</strong>
+                    <span className="text-[11px] text-gray-500 font-mono block truncate">{userEmail}</span>
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded bg-[#3d9970]/20 text-[#2d5c46] text-[10px] font-extrabold">
+                      {userRole}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      onSignOut();
+                    }}
+                    className="w-full text-left ltr:text-left rtl:text-right px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold flex items-center gap-2 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Abmelden</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Action 2: "Kundenbereich" Protected Entry Point */}
           <button
             type="button"
-            onClick={() =>
-              onViewChange(currentView === 'landing' ? 'kundenbereich' : 'landing')
-            }
-            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition-all shadow-md ${
-              currentView === 'landing'
-                ? 'bg-[#08271e] hover:bg-[#123d2e] text-white border border-white/20'
-                : 'bg-[#3d9970] hover:bg-[#2f815f] text-white'
+            onClick={handleDashboardClick}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs md:text-sm font-extrabold transition-all shadow-md ${
+              currentView === 'kundenbereich'
+                ? 'bg-[#3d9970] text-white'
+                : 'bg-[#08271e] hover:bg-[#123d2e] text-white border border-white/20'
             }`}
           >
             <LayoutDashboard className="w-4 h-4 text-[#86c8aa]" />
-            <span>{currentView === 'landing' ? 'Kundenbereich / Live-Dashboard →' : '← Zurück zur Website'}</span>
+            <span>
+              {currentView === 'landing'
+                ? 'Kundenbereich / Live-Dashboard →'
+                : '← Zurück zur Website'}
+            </span>
           </button>
-
-          {/* Request Audit Quote Button (Landing mode) */}
-          {currentView === 'landing' && (
-            <button
-              type="button"
-              onClick={onRequestQuote}
-              className="hidden xl:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#202527] to-[#142032] text-white text-xs md:text-sm font-bold shadow-md hover:from-[#353d40] hover:to-[#08271e] transition-all border border-white/20"
-            >
-              <span>{t.requestReview}</span>
-              <ArrowUpRight className="w-3.5 h-3.5 text-[#3d9970]" />
-            </button>
-          )}
 
           {/* Multi-Language Dropdown */}
           <div className="relative">
@@ -155,7 +228,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Mobile Navigation Drawer Toggle */}
+          {/* Mobile Drawer Toggle */}
           {currentView === 'landing' && (
             <button
               type="button"
@@ -177,68 +250,81 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => setMobileMenuOpen(false)}
             className="hover:text-[#3d9970] transition-colors py-1"
           >
-            {t.navWhyAudit}
+            Lösung
           </a>
           <a
             href="#funktion"
             onClick={() => setMobileMenuOpen(false)}
             className="hover:text-[#3d9970] transition-colors py-1"
           >
-            {t.navWhatWeAudit}
-          </a>
-          <a
-            href="#nutzen"
-            onClick={() => setMobileMenuOpen(false)}
-            className="hover:text-[#3d9970] transition-colors py-1"
-          >
-            {t.navBenefits}
+            Funktionen
           </a>
           <a
             href="#ablauf"
             onClick={() => setMobileMenuOpen(false)}
             className="hover:text-[#3d9970] transition-colors py-1"
           >
-            {t.navProcess}
+            Ablauf
           </a>
           <a
-            href="#pricing"
+            href="#roi"
             onClick={() => setMobileMenuOpen(false)}
             className="hover:text-[#3d9970] transition-colors py-1"
           >
-            {t.navPricing}
+            ROI-Rechner
           </a>
           <a
-            href="#faq"
+            href="#pakete"
             onClick={() => setMobileMenuOpen(false)}
             className="hover:text-[#3d9970] transition-colors py-1"
           >
-            {t.navFaq}
+            Pakete
           </a>
           <a
             href="#kontakt"
             onClick={() => setMobileMenuOpen(false)}
             className="hover:text-[#3d9970] transition-colors py-1"
           >
-            {t.navContact}
+            Kontakt
           </a>
 
           <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
-            <a
-              href="tel:+41445897288"
-              className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/10 text-white font-bold"
-            >
-              <Phone className="w-4 h-4 text-[#3d9970]" />
-              <span>044 589 72 88</span>
-            </a>
+            {!isAuthenticated ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenAuthModal();
+                }}
+                className="py-3 rounded-xl bg-white text-gray-900 font-extrabold text-center shadow-md flex items-center justify-center gap-2"
+              >
+                <LogIn className="w-4 h-4 text-[#3d9970]" />
+                <span>Anmelden</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onSignOut();
+                }}
+                className="py-3 rounded-xl bg-red-600 text-white font-extrabold text-center shadow-md flex items-center justify-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Abmelden ({userName})</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => {
                 setMobileMenuOpen(false);
-                onRequestQuote();
+                handleDashboardClick();
               }}
-              className="py-3 rounded-xl bg-[#3d9970] text-white font-extrabold text-center shadow-lg"
+              className="py-3 rounded-xl bg-[#3d9970] text-white font-extrabold text-center shadow-lg flex items-center justify-center gap-2"
             >
-              {t.requestReview}
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Kundenbereich / Live-Dashboard →</span>
             </button>
           </div>
         </div>

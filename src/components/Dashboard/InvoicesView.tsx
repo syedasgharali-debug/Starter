@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Language, InvoiceRecord } from '../../types';
 import { translations } from '../../translations/translations';
 import {
@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Layers,
   Sparkles,
+  HelpCircle,
 } from 'lucide-react';
 
 interface InvoicesViewProps {
@@ -24,8 +25,9 @@ interface InvoicesViewProps {
   invoices: InvoiceRecord[];
 }
 
-export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoices }) => {
+export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoices: initialInvoicesProp }) => {
   const t = translations[currentLang];
+  const [invoiceList, setInvoiceList] = useState<InvoiceRecord[]>(initialInvoicesProp);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceRecord | null>(null);
@@ -33,7 +35,11 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const filteredInvoices = invoices.filter((inv) => {
+  useEffect(() => {
+    setInvoiceList(initialInvoicesProp);
+  }, [initialInvoicesProp]);
+
+  const filteredInvoices = invoiceList.filter((inv) => {
     const matchesSearch =
       inv.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       inv.supplierName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -64,6 +70,14 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
     navigator.clipboard.writeText(text);
     setLetterCopied(true);
     setTimeout(() => setLetterCopied(false), 3000);
+  };
+
+  const handleUpdateInvoiceStatus = (invId: string, newStatus: InvoiceRecord['status'], actionLabel: string) => {
+    setInvoiceList((prev) =>
+      prev.map((item) => (item.id === invId ? { ...item, status: newStatus } : item))
+    );
+    showToast(`Status für ${selectedInvoice?.invoiceNumber || invId}: ${actionLabel}`);
+    setSelectedInvoice(null);
   };
 
   // Helper to escape CSV cell value safely according to RFC 4180
@@ -234,7 +248,7 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
 
     const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(','), ...rows].join('\r\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: 'type/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -398,7 +412,11 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium">
               {filteredInvoices.map((inv) => (
-                <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={inv.id}
+                  onClick={() => setSelectedInvoice(inv)}
+                  className="hover:bg-[#eef8f3]/60 cursor-pointer transition-colors"
+                >
                   <td className="p-4 font-bold font-mono text-[#142032]">{inv.invoiceNumber}</td>
                   <td className="p-4">{inv.supplierName}</td>
                   <td className="p-4 font-mono text-gray-600">{inv.poNumber}</td>
@@ -419,7 +437,11 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
                       </span>
                     ) : inv.status === 'duplicate' ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fdf0ea] text-[#df6029] text-[11px] font-bold">
-                        <XCircle className="w-3 h-3" /> Doppelabrechnung
+                        <XCircle className="w-3 h-3" /> Zahlung gestoppt
+                      </span>
+                    ) : inv.status === 'in_review' || inv.status === 'processing' ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fff6ea] text-[#8a5a10] text-[11px] font-bold">
+                        <HelpCircle className="w-3 h-3" /> In Klärung
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fff6ea] text-[#8a5a10] text-[11px] font-bold">
@@ -430,7 +452,10 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
                   <td className="p-4 text-center">
                     <button
                       type="button"
-                      onClick={() => setSelectedInvoice(inv)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedInvoice(inv);
+                      }}
                       className="p-1.5 rounded-lg bg-[#eef8f3] hover:bg-[#d5ebe0] text-[#2d5c46] transition-colors"
                       title="Ansehen"
                     >
@@ -446,8 +471,8 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
 
       {/* Invoice Line-Item Detail Drawer / Modal */}
       {selectedInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#08271e]/50 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-3xl w-full border border-gray-200 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#08271e]/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-3xl w-full border border-gray-200 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto relative animate-scaleUp">
             <div className="flex justify-between items-start border-b border-gray-100 pb-4">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-[#3d9970]">
@@ -589,10 +614,9 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
             <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-end gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  showToast(`Zahlungsstopp aktiviert für ${selectedInvoice.invoiceNumber}. ERP per API benachrichtigt.`);
-                  setSelectedInvoice(null);
-                }}
+                onClick={() =>
+                  handleUpdateInvoiceStatus(selectedInvoice.id, 'duplicate', 'Zahlungsstopp aktiviert')
+                }
                 className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
               >
                 <XCircle className="w-4 h-4" />
@@ -606,7 +630,7 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
                     selectedInvoice.disputeLetter ||
                       `Sehr geehrte Damen und Herren,\n\nzur Rechnung ${selectedInvoice.invoiceNumber} bitten wir um Stornierung/Gutsagung der Abweichung von CHF ${selectedInvoice.varianceCHF}.\n\nKlarSolution Audit`
                   );
-                  showToast(`Reklamationsschreiben für ${selectedInvoice.invoiceNumber} in Zwischenablage kopiert.`);
+                  handleUpdateInvoiceStatus(selectedInvoice.id, 'in_review', 'In Lieferanten-Klärung übergeben');
                 }}
                 className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
               >
@@ -616,10 +640,9 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
 
               <button
                 type="button"
-                onClick={() => {
-                  showToast(`Rechnung ${selectedInvoice.invoiceNumber} wurde manuell freigegeben.`);
-                  setSelectedInvoice(null);
-                }}
+                onClick={() =>
+                  handleUpdateInvoiceStatus(selectedInvoice.id, 'approved', 'Rechnung freigegeben')
+                }
                 className="px-4 py-2.5 rounded-xl bg-[#3d9970] hover:bg-[#2f8a68] text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
               >
                 <CheckCircle2 className="w-4 h-4" />

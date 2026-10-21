@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Language, AppView, DashboardView, InvoiceRecord, SupplierRecord } from './types';
+import { Language, AppView, DashboardView, InvoiceRecord, SupplierRecord, OperationalRole } from './types';
 import { Header } from './components/Header';
 import { MarqueeBar } from './components/MarqueeBar';
 import { LandingPage } from './components/LandingPage';
 import { KlaraChatbot } from './components/KlaraChatbot';
 import { ContactModal } from './components/ContactModal';
+import { AuthModal } from './components/AuthModal';
 import { SuiteSwitcher } from './components/SuiteSwitcher';
 
 import { DashboardLayout } from './components/Dashboard/DashboardLayout';
@@ -18,6 +19,14 @@ import { AdminView } from './components/Dashboard/AdminView';
 
 import { initialInvoices, initialSuppliers } from './data/sampleData';
 
+export interface UserSession {
+  isAuthenticated: boolean;
+  name: string;
+  email: string;
+  role: OperationalRole;
+  avatarUrl: string;
+}
+
 export default function App() {
   const [currentLang, setCurrentLang] = useState<Language>('de');
   const [currentView, setCurrentView] = useState<AppView>('landing');
@@ -25,6 +34,16 @@ export default function App() {
 
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [quoteNotes, setQuoteNotes] = useState('');
+
+  // Authentication State
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [userSession, setUserSession] = useState<UserSession>({
+    isAuthenticated: true,
+    name: 'Ali Kazmi',
+    email: 'ali.kazmi@smartgrid.ch',
+    role: 'Administrator',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  });
 
   const [invoices, setInvoices] = useState<InvoiceRecord[]>(initialInvoices);
   const [suppliers, setSuppliers] = useState<SupplierRecord[]>(initialSuppliers);
@@ -44,6 +63,32 @@ export default function App() {
     setInvoices((prev) => [newInv, ...prev]);
   };
 
+  const handleLoginSuccess = (name: string, email: string, role: OperationalRole) => {
+    setUserSession({
+      isAuthenticated: true,
+      name,
+      email,
+      role,
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    });
+    setCurrentView('kundenbereich');
+  };
+
+  const handleSignOut = () => {
+    setUserSession((prev) => ({
+      ...prev,
+      isAuthenticated: false,
+    }));
+    setCurrentView('landing');
+  };
+
+  const handleRoleChange = (newRole: OperationalRole) => {
+    setUserSession((prev) => ({
+      ...prev,
+      role: newRole,
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-white text-[#142032] font-sans selection:bg-[#3d9970] selection:text-white relative">
       {/* Top Suite Switcher Pill Bar */}
@@ -60,6 +105,13 @@ export default function App() {
         currentView={currentView}
         onViewChange={setCurrentView}
         onRequestQuote={() => handleOpenQuoteWithNotes()}
+        isAuthenticated={userSession.isAuthenticated}
+        userName={userSession.name}
+        userEmail={userSession.email}
+        userRole={userSession.role}
+        userAvatarUrl={userSession.avatarUrl}
+        onOpenAuthModal={() => setAuthModalOpen(true)}
+        onSignOut={handleSignOut}
       />
 
       {/* Main View Router */}
@@ -79,6 +131,8 @@ export default function App() {
           activeView={dashboardTab}
           onViewChange={setDashboardTab}
           onBackToLanding={() => setCurrentView('landing')}
+          activeRole={userSession.role}
+          onRoleChange={handleRoleChange}
         >
           {dashboardTab === 'overview' && (
             <OverviewView
@@ -124,6 +178,8 @@ export default function App() {
           activeView="admin"
           onViewChange={setDashboardTab}
           onBackToLanding={() => setCurrentView('landing')}
+          activeRole={userSession.role}
+          onRoleChange={handleRoleChange}
         >
           <AdminView currentLang={currentLang} />
         </DashboardLayout>
@@ -141,6 +197,14 @@ export default function App() {
         onClose={() => setQuoteModalOpen(false)}
         currentLang={currentLang}
         prefilledNotes={quoteNotes}
+      />
+
+      {/* Auth / Google Sign-In Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        currentLang={currentLang}
+        onLoginSuccess={handleLoginSuccess}
       />
     </div>
   );

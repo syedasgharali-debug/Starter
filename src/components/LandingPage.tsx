@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Language } from '../types';
 import { translations } from '../translations/translations';
+import { Footer } from './Footer';
 import {
   ShieldAlert,
   CheckCircle2,
@@ -68,9 +69,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     setFormError('');
     setFormSubmitted(true);
   };
-
-  // FAQ Accordion State
-  const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(0);
 
   return (
     <div className="w-full bg-white text-[#142032] overflow-x-hidden font-sans">
@@ -677,6 +675,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
       </section>
+
+      {/* 8. RESTORED 4-COLUMN FOOTER */}
+      <Footer
+        currentLang={currentLang}
+        onRequestQuote={() => onRequestQuoteWithNotes()}
+      />
     </div>
   );
 };

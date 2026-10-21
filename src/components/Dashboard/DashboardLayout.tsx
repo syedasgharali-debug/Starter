@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Lock,
   UserCheck,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -23,6 +24,8 @@ interface DashboardLayoutProps {
   onViewChange: (view: DashboardView) => void;
   onBackToLanding: () => void;
   children: React.ReactNode;
+  activeRole?: OperationalRole;
+  onRoleChange?: (role: OperationalRole) => void;
 }
 
 const roleBadges: Record<OperationalRole, string> = {
@@ -33,15 +36,39 @@ const roleBadges: Record<OperationalRole, string> = {
   Auditor: 'Revision & Audit-Trail',
 };
 
+const roleDescriptions: Record<OperationalRole, string> = {
+  Administrator: 'Vollzugriff Organisation',
+  Controller: 'Finanz- & Risikoübersicht',
+  Buchhalter: 'Tägliche Prüfung & Klärung',
+  Freigeber: 'Entscheidung & Freigabe',
+  Auditor: 'Revisionssicher - Nur Lesen',
+};
+
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   currentLang,
   activeView,
   onViewChange,
   onBackToLanding,
   children,
+  activeRole: parentRole = 'Administrator',
+  onRoleChange,
 }) => {
   const t = translations[currentLang];
-  const [activeRole, setActiveRole] = useState<OperationalRole>('Administrator');
+  const [internalRole, setInternalRole] = useState<OperationalRole>(parentRole);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const currentRole = parentRole || internalRole;
+
+  const handleSelectRole = (role: OperationalRole) => {
+    setInternalRole(role);
+    if (onRoleChange) {
+      onRoleChange(role);
+    }
+    setToastMessage(`Rolle gewechselt zu: ${role} (${roleDescriptions[role]})`);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3500);
+  };
 
   const menuItems: { id: DashboardView; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: t.dashTabOverview, icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -54,33 +81,19 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   ];
 
   return (
-    <div className="min-h-screen bg-[#f7f9f8] text-[#142032] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f7f9f8] text-[#142032] flex flex-col font-sans relative">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-20 right-6 z-50 bg-[#08271e] text-white px-5 py-3 rounded-2xl shadow-2xl border border-[#3d9970] flex items-center gap-3 animate-fadeIn">
+          <CheckCircle2 className="w-5 h-5 text-[#3d9970]" />
+          <span className="text-xs font-bold">{toastMessage}</span>
+        </div>
+      )}
+
       {/* Top Portal Header */}
       <header className="bg-[#08271e] text-white sticky top-0 z-40 border-b border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4 shadow-md">
         <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={onBackToLanding}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 transition-colors flex items-center gap-1.5 text-xs font-bold"
-            title="Zurück zur Website"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">{t.backToLanding}</span>
-          </button>
-
-          <div className="h-6 w-px bg-white/20 hidden sm:block" />
-
-          <div className="flex items-center gap-2">
-            <span className="font-serif font-extrabold text-lg text-white">
-              klar <span className="text-[#3d9970]">solution</span>
-            </span>
-            <span className="hidden md:inline-block px-2.5 py-0.5 rounded-full bg-[#3d9970]/30 text-[#86c8aa] text-[10px] font-extrabold uppercase border border-[#3d9970]/40">
-              Audit Cockpit
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
+          {/* Back to Landing Page Button */}
           <button
             type="button"
             onClick={onBackToLanding}
@@ -93,10 +106,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
           <div className="h-6 w-px bg-white/20 hidden sm:block" />
 
+          {/* Unified Brand Logo Badge */}
           <div className="flex items-center gap-2">
-            <span className="font-serif font-extrabold text-lg text-white">
-              klar <span className="text-[#3d9970]">solution</span>
-            </span>
+            <div className="flex flex-col text-left leading-tight">
+              <span className="font-serif font-extrabold tracking-tight text-lg text-white font-sans">
+                klar <span className="text-[#3d9970]">solution</span>
+              </span>
+              <span className="text-[9px] uppercase tracking-widest text-[#a8cfbd] font-medium">
+                Smart Grid AG
+              </span>
+            </div>
             <span className="hidden md:inline-block px-2.5 py-0.5 rounded-full bg-[#3d9970]/30 text-[#86c8aa] text-[10px] font-extrabold uppercase border border-[#3d9970]/40">
               Kundenbereich
             </span>
@@ -118,22 +137,22 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <div className="flex items-center gap-2 bg-white/10 border border-white/15 px-2.5 py-1.5 rounded-xl text-xs">
             <UserCheck className="w-3.5 h-3.5 text-[#86c8aa]" />
             <select
-              value={activeRole}
-              onChange={(e) => setActiveRole(e.target.value as OperationalRole)}
+              value={currentRole}
+              onChange={(e) => handleSelectRole(e.target.value as OperationalRole)}
               className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer pr-1 [&>option]:bg-[#08271e] [&>option]:text-white"
             >
-              <option value="Administrator">Administrator</option>
-              <option value="Controller">Controller</option>
-              <option value="Buchhalter">Buchhalter</option>
-              <option value="Freigeber">Freigeber</option>
-              <option value="Auditor">Auditor</option>
+              <option value="Administrator">Administrator (Vollzugriff Organisation)</option>
+              <option value="Controller">Controller (Finanz- &amp; Risikoübersicht)</option>
+              <option value="Buchhalter">Buchhalter (Tägliche Prüfung &amp; Klärung)</option>
+              <option value="Freigeber">Freigeber (Entscheidung &amp; Freigabe)</option>
+              <option value="Auditor">Auditor (Revisionssicher - Nur Lesen)</option>
             </select>
           </div>
 
           {/* Active Permission Badge */}
           <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#3d9970]/20 border border-[#3d9970]/40 text-[#86c8aa] text-[11px] font-bold">
             <ShieldCheck className="w-3.5 h-3.5 text-[#86c8aa]" />
-            <span>{roleBadges[activeRole]}</span>
+            <span>{roleBadges[currentRole]}</span>
           </div>
 
           <button

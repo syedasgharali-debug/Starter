@@ -1,0 +1,6 @@
+{
+  "name": "klar solution – B2B Invoice Audit Platform",
+  "description": "Kostenverlust-Prüfung für Unternehmen: Automatische und gründliche Prüfung von Lieferantenrechnungen auf Doppelabrechnungen, Preisabweichungen und Mengenfehler.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

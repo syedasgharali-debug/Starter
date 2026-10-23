@@ -140,10 +140,7 @@ export default function App() {
             <Route
               index
               element={
-                <>
-                  <MarqueeBar currentLang={currentLang} />
-                  <LandingPageWrapper currentLang={currentLang} />
-                </>
+                <LandingPageWrapper currentLang={currentLang} />
               }
             />
           </Route>

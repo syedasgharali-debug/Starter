@@ -3,7 +3,6 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { Language, OperationalRole } from '../types';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
-import { SuiteSwitcher } from '../components/SuiteSwitcher';
 import { KlaraChatbot } from '../components/KlaraChatbot';
 import { ContactModal } from '../components/ContactModal';
 import { AuthModal } from '../components/AuthModal';
@@ -61,13 +60,6 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-white text-[#142032] font-sans selection:bg-[#3d9970] selection:text-white relative">
-      {/* Top Suite Switcher Pill Bar */}
-      <SuiteSwitcher
-        currentView="landing"
-        onViewChange={handleViewChange}
-        currentLang={currentLang}
-      />
-
       {/* Public Marketing Header */}
       <Header
         currentLang={currentLang}

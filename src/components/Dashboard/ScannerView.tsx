@@ -12,14 +12,34 @@ import {
   Check,
   RefreshCw,
   FileText,
-  Search,
+  ShieldAlert,
   Database,
-  Layers,
+  Code2,
+  Download,
 } from 'lucide-react';
 
 interface ScannerViewProps {
   currentLang: Language;
   onAddAuditedInvoice: (invoice: InvoiceRecord) => void;
+}
+
+export interface NeuralAuditOutput {
+  audit_status: 'FLAGGED' | 'APPROVED';
+  supplier: {
+    name: string;
+    iban: string;
+    confidence_score: number;
+  };
+  discrepancies_found: Array<{
+    type: 'PRICE_VARIANCE' | 'QUANTITY_MISMATCH' | 'TAX_CALCULATION_ERROR';
+    item: string;
+    expected: number | string;
+    actual: number | string;
+    financial_impact_chf: number;
+    severity: 'HIGH' | 'MEDIUM' | 'LOW';
+  }>;
+  total_financial_loss_prevented_chf: number;
+  draft_dispute_letter_de: string;
 }
 
 export const ScannerView: React.FC<ScannerViewProps> = ({
@@ -29,78 +49,138 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   const t = translations[currentLang];
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Neural Audit Presets including prompt PO-2026-992
   const samplePresets = [
     {
-      title: 'Bauwerk Alpine AG - Gotthard Beton (Preiszuschlag)',
-      supplier: 'Gotthard Beton & Kies AG',
-      invoiceNumber: 'INV-BAU-2026-911',
+      title: 'PO-2026-992: Swiss Industrial Hydraulics AG (Neural Forensic Audit)',
+      poNumber: 'PO-2026-992',
+      supplierName: 'Swiss Industrial Hydraulics AG',
+      iban: 'CH93 0070 0110 0001 2345 6',
+      invoiceNumber: 'INV-2026-992-FX',
+      date: '2026-10-23',
+      amount: 'CHF 3,426.30',
+      itemsText: '12x Druckventil 200 bar (SKU: HYD-04) @ CHF 265.00/Stk (PO genehmigt: 10 Stk @ CHF 240.00/Stk). MWST ausgewiesen mit 7.7% statt 8.1%.',
+      auditResult: {
+        audit_status: 'FLAGGED' as const,
+        supplier: {
+          name: 'Swiss Industrial Hydraulics AG',
+          iban: 'CH93 0070 0110 0001 2345 6',
+          confidence_score: 0.98,
+        },
+        discrepancies_found: [
+          {
+            type: 'PRICE_VARIANCE' as const,
+            item: 'Druckventil 200 bar (SKU: HYD-04)',
+            expected: 'CHF 240.00 / Stk',
+            actual: 'CHF 265.00 / Stk',
+            financial_impact_chf: 250.0,
+            severity: 'HIGH' as const,
+          },
+          {
+            type: 'QUANTITY_MISMATCH' as const,
+            item: 'Druckventil 200 bar (SKU: HYD-04)',
+            expected: '10 Stk (Bestellmenge PO-2026-992)',
+            actual: '12 Stk (In Rechnung gestellt)',
+            financial_impact_chf: 530.0,
+            severity: 'HIGH' as const,
+          },
+          {
+            type: 'TAX_CALCULATION_ERROR' as const,
+            item: 'Schweizer Mehrwertsteuer (ESTV Compliance)',
+            expected: '8.1% MWST (CHF 194.40 bei PO-Wert)',
+            actual: '7.7% MWST (Veralteter Steuersatz)',
+            financial_impact_chf: 9.6,
+            severity: 'MEDIUM' as const,
+          },
+        ],
+        total_financial_loss_prevented_chf: 789.6,
+        draft_dispute_letter_de: `Smart Grid AG / KlarSolution Revisionsleitung\nIn der Au 44, 8706 Meilen, Schweiz\n\nSwiss Industrial Hydraulics AG\nRechnungs- und Debitorenwesen\n\nBetreff: Kaufmännische Mängelrüge & Beanstandung zu Rechnung INV-2026-992-FX (PO-2026-992)\n\nSehr geehrte Damen und Herren,\n\nbei der automatisierten forensischen 3-Wege-Prüfung Ihrer Eingangsrechnung INV-2026-992-FX wurden folgende erhebliche Unstimmigkeiten festgestellt:\n\n1. Preiserhöhung: SKU HYD-04 (Druckventil 200 bar) wurde zu CHF 265.00/Stk abgerechnet (vereinbarter PO-Preis: CHF 240.00/Stk). Differenz: CHF 250.00.\n2. Mengenabweichung: Es wurden 12 Einheiten berechnet, obwohl gemäss Bestellschein PO-2026-992 und Wareneingang nur 10 Einheiten freigegeben wurden. Übercharge: CHF 530.00.\n3. MWST-Fehler: Die Ausweisung erfolgte mit dem veralteten MWST-Satz von 7.7% anstelle des gesetzlichen Schweizer Satzes von 8.1%.\n\nDer verhinderte Schaden beträgt insgesamt CHF 789.60.\n\nGemäss Schweizer Obligationenrecht (OR Art. 82 / Art. 107) fordern wir Sie auf, die vorliegende Rechnung zu stornieren und eine korrigierte Rechnung über CHF 2,594.40 (inkl. 8.1% MWST) sowie eine Gutschrift für die Differenz innert 10 Tagen auszustellen.\n\nFreundliche Grüsse,\nKlarSolution Neural Revisionsleitung\nSmart Grid AG`,
+      },
+    },
+    {
+      title: 'Bauwerk Alpine AG - Gotthard Beton & Kies AG (Beton-Preiszuschlag)',
       poNumber: 'PO-BAU-4010',
+      supplierName: 'Gotthard Beton & Kies AG',
+      iban: 'CH44 0023 0230 0044 1122 3',
+      invoiceNumber: 'INV-BAU-2026-911',
       date: '2026-10-19',
       amount: 'CHF 38,400.00',
       itemsText: '400m3 Frischbeton C25/30 @ CHF 96.00/m3 = CHF 38,400.00. (PO #PO-BAU-4010 vereinbart: CHF 88.00/m3)',
-      varianceCHF: 3200.0,
-      discrepancyType: 'Price Variance' as const,
-      riskLevel: 'High' as const,
+      auditResult: {
+        audit_status: 'FLAGGED' as const,
+        supplier: {
+          name: 'Gotthard Beton & Kies AG',
+          iban: 'CH44 0023 0230 0044 1122 3',
+          confidence_score: 0.99,
+        },
+        discrepancies_found: [
+          {
+            type: 'PRICE_VARIANCE' as const,
+            item: 'Frischbeton C25/30 (400 m³)',
+            expected: 'CHF 88.00 / m³',
+            actual: 'CHF 96.00 / m³',
+            financial_impact_chf: 3200.0,
+            severity: 'HIGH' as const,
+          },
+        ],
+        total_financial_loss_prevented_chf: 3200.0,
+        draft_dispute_letter_de: `Sehr geehrte Damen und Herren,\n\nwir beanstanden die Rechnung INV-BAU-2026-911 bezüglich PO-BAU-4010. Der m³-Preis für Frischbeton C25/30 übersteigt den vertraglich fixierten Satz von CHF 88.00/m³ um CHF 8.00/m³.\n\nBitte übermitteln Sie uns eine Gutschrift über CHF 3'200.00.\n\nFreundliche Grüsse,\nSmart Grid AG / Bauwerk Alpine AG`,
+      },
     },
     {
-      title: 'Swiss Industrial Hydraulics AG (Preis-Abweichung)',
-      supplier: 'Swiss Industrial Hydraulics AG',
-      invoiceNumber: 'INV-2026-904',
-      poNumber: 'PO-88204',
-      date: '2026-10-12',
-      amount: 'CHF 12,400.00',
-      itemsText: '100x Industrial Hydraulic Valves #HV-400 @ CHF 124.00/stk = CHF 12,400.00. (PO #PO-88204 vereinbart: CHF 118.00/stk)',
-      varianceCHF: 600.0,
-      discrepancyType: 'Price Variance' as const,
-      riskLevel: 'Medium' as const,
-    },
-    {
-      title: 'Alpine Freight Logistics (Mengenfehler)',
-      supplier: 'Alpine Logistics & Freight Services GmbH',
-      invoiceNumber: 'INV-2026-881',
+      title: 'Alpine Freight Logistics (Mengenfehler Transport)',
       poNumber: 'PO-88102',
+      supplierName: 'Alpine Logistics & Freight Services GmbH',
+      iban: 'CH88 0078 0000 8822 1100 4',
+      invoiceNumber: 'INV-2026-881',
       date: '2026-10-10',
       amount: 'CHF 8,950.00',
       itemsText: '23x Express Pallet Freight Delivery @ CHF 387.50 = CHF 8,950.00. (Lieferschein Wareneingang bestätigt nur 20 Paletten)',
-      varianceCHF: 1162.5,
-      discrepancyType: 'Quantity Mismatch' as const,
-      riskLevel: 'High' as const,
+      auditResult: {
+        audit_status: 'FLAGGED' as const,
+        supplier: {
+          name: 'Alpine Logistics & Freight Services GmbH',
+          iban: 'CH88 0078 0000 8822 1100 4',
+          confidence_score: 0.95,
+        },
+        discrepancies_found: [
+          {
+            type: 'QUANTITY_MISMATCH' as const,
+            item: 'Express Pallet Freight Delivery',
+            expected: '20 Paletten (gemäss Wareneingang)',
+            actual: '23 Paletten (in Rechnung)',
+            financial_impact_chf: 1162.5,
+            severity: 'HIGH' as const,
+          },
+        ],
+        total_financial_loss_prevented_chf: 1162.5,
+        draft_dispute_letter_de: `Sehr geehrte Damen und Herren,\n\nauf Rechnung INV-2026-881 wurden 23 Paletten abgerechnet. Gemäss quittiertem Lieferschein wurden jedoch nur 20 Paletten zugestellt.\n\nWir bitten um Reduktion der Rechnungssumme um CHF 1'162.50.\n\nFreundliche Grüsse,\nSmart Grid AG / Revisionsabteilung`,
+      },
     },
   ];
 
   const [selectedPresetIndex, setSelectedPresetIndex] = useState(0);
-  const [supplierInput, setSupplierInput] = useState(samplePresets[0].supplier);
-  const [invoiceNoInput, setInvoiceNoInput] = useState(samplePresets[0].invoiceNumber);
-  const [poNoInput, setPoNoInput] = useState(samplePresets[0].poNumber);
-  const [dateInput, setDateInput] = useState(samplePresets[0].date);
-  const [amountInput, setAmountInput] = useState(samplePresets[0].amount);
-  const [itemsTextInput, setItemsTextInput] = useState(samplePresets[0].itemsText);
+  const currentPreset = samplePresets[selectedPresetIndex];
 
   // Scan progress state
   const [scanning, setScanning] = useState(false);
   const [scanStep, setScanStep] = useState<number>(0);
-  const [scanResult, setScanResult] = useState<any | null>(null);
+  const [auditOutput, setAuditOutput] = useState<NeuralAuditOutput | null>(samplePresets[0].auditResult);
   const [copied, setCopied] = useState(false);
+  const [rawJsonView, setRawJsonView] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
 
   const scanSteps = [
-    { num: 1, title: '1. OCR-Texterkennung', desc: 'Extrahiere Beleg-Kopfdaten, Beträge & Einzelpositionen...' },
-    { num: 2, title: '2. Claude 3.5 Sonnet Extraktion', desc: 'Semantische Validierung & Strukturierung der Belege...' },
-    { num: 3, title: '3. 3-Wege-Abgleich (Rechnung vs. PO vs. Lieferschein)', desc: 'Gleiche Preise und Mengen mit ERP-Bestellung & Lieferschein ab...' },
-    { num: 4, title: '4. KI-Abweichungserkennung & Reklamation', desc: 'Berechne Gesamtdifferenz & erstelle Reklamationsentwurf...' },
+    { num: 1, title: '1. Multimodale OCR & Vision', desc: 'Extrahiere Kopfdaten, Einzelpositionen & QR-IBAN...' },
+    { num: 2, title: '2. Purchase Order Reconciliation', desc: 'Abgleich mit PO-Context (PO-2026-992) & Stammdaten...' },
+    { num: 3, title: '3. Neural Discrepancy & VAT Engine', desc: 'Prüfe Preissätze, Mengen, ESTV 8.1% MWST & Duplikate...' },
+    { num: 4, title: '4. Forensic Report & Dispute Generation', desc: 'Erstelle Mängelrüge nach OR Art. 82/107 & Schutzsumme...' },
   ];
 
   const handleSelectPreset = (idx: number) => {
     setSelectedPresetIndex(idx);
-    const p = samplePresets[idx];
-    setSupplierInput(p.supplier);
-    setInvoiceNoInput(p.invoiceNumber);
-    setPoNoInput(p.poNumber);
-    setDateInput(p.date);
-    setAmountInput(p.amount);
-    setItemsTextInput(p.itemsText);
-    setScanResult(null);
+    setAuditOutput(samplePresets[idx].auditResult);
   };
 
   const handleRun4StepSimulation = (
@@ -108,62 +188,49 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     presetIdx: number = selectedPresetIndex
   ) => {
     setScanning(true);
-    setScanResult(null);
     setScanStep(1);
 
     const preset = samplePresets[presetIdx];
-    const fileName = customFileName || `Rechnung_${preset.invoiceNumber}.pdf`;
+    const fileName = customFileName || `Invoice_${preset.invoiceNumber}.pdf`;
 
-    setTimeout(() => setScanStep(2), 700);
-    setTimeout(() => setScanStep(3), 1400);
-    setTimeout(() => setScanStep(4), 2100);
+    setTimeout(() => setScanStep(2), 600);
+    setTimeout(() => setScanStep(3), 1200);
+    setTimeout(() => setScanStep(4), 1800);
 
     setTimeout(() => {
       setScanning(false);
       setScanStep(0);
-
-      const createdAuditResult = {
-        discrepancyFound: true,
-        discrepancyType: preset.discrepancyType,
-        confidenceScorePct: 99,
-        summary: `Echtzeit-Scan abgeschlossen (${fileName}): ${preset.supplier} (Rechnung ${preset.invoiceNumber}). ${preset.itemsText}`,
-        overchargeAmountCHF: preset.varianceCHF,
-        disputeLetterTemplate: `Sehr geehrte Damen und Herren,\n\nbei der Belegprüfung unserer Lieferantenrechnung ${preset.invoiceNumber} (PO ${preset.poNumber}) wurde eine erhebliche Abweichung festgestellt.\n\nDetailbefund:\n${preset.itemsText}\n\nGemäss Schweizer Obligationenrecht (OR Art. 82 / 107) fordern wir Sie auf, uns innert 10 Tagen eine entsprechende Gutschrift über CHF ${preset.varianceCHF.toFixed(2)} einzureichen.\n\nFreundliche Grüsse,\nSmart Grid AG / KlarSolution Revisionsleitung`,
-      };
-
-      setScanResult(createdAuditResult);
+      setAuditOutput(preset.auditResult);
 
       // Add to global state
       const newRecord: InvoiceRecord = {
         id: `inv-scan-${Date.now()}`,
         invoiceNumber: preset.invoiceNumber,
-        supplierName: preset.supplier,
+        supplierName: preset.supplierName,
         invoiceDate: preset.date,
         poNumber: preset.poNumber,
         totalBilledCHF: parseFloat(preset.amount.replace(/[^0-9.]/g, '')),
-        totalPOCHF: parseFloat(preset.amount.replace(/[^0-9.]/g, '')) - preset.varianceCHF,
-        varianceCHF: preset.varianceCHF,
-        status: 'discrepancy',
-        discrepancyType: preset.discrepancyType,
-        riskLevel: preset.riskLevel,
-        confidenceScore: 99,
-        lineItems: [
-          {
-            id: `li-${Date.now()}`,
-            description: preset.itemsText,
-            poUnitPrice: 100,
-            billedUnitPrice: 110,
-            poQuantity: 10,
-            billedQuantity: 10,
-            varianceCHF: preset.varianceCHF,
-            reason: preset.itemsText,
-          },
-        ],
-        disputeLetter: createdAuditResult.disputeLetterTemplate,
+        totalPOCHF: parseFloat(preset.amount.replace(/[^0-9.]/g, '')) - preset.auditResult.total_financial_loss_prevented_chf,
+        varianceCHF: preset.auditResult.total_financial_loss_prevented_chf,
+        status: preset.auditResult.audit_status === 'FLAGGED' ? 'discrepancy' : 'approved',
+        discrepancyType: preset.auditResult.discrepancies_found[0]?.type === 'PRICE_VARIANCE' ? 'Price Variance' : preset.auditResult.discrepancies_found[0]?.type === 'QUANTITY_MISMATCH' ? 'Quantity Mismatch' : 'VAT Error',
+        riskLevel: 'High',
+        confidenceScore: Math.round(preset.auditResult.supplier.confidence_score * 100),
+        lineItems: preset.auditResult.discrepancies_found.map((d, i) => ({
+          id: `li-${i}`,
+          description: d.item,
+          poUnitPrice: 240,
+          billedUnitPrice: 265,
+          poQuantity: 10,
+          billedQuantity: 12,
+          varianceCHF: d.financial_impact_chf,
+          reason: `${d.type}: Ist (${d.actual}) vs Soll (${d.expected})`,
+        })),
+        disputeLetter: preset.auditResult.draft_dispute_letter_de,
       };
 
       onAddAuditedInvoice(newRecord);
-    }, 2800);
+    }, 2400);
   };
 
   const handleDropzoneClick = () => {
@@ -179,8 +246,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   };
 
   return (
-    <div className="space-y-8 animate-fadeIn text-[#142032]">
-      {/* Hidden File Input for Native Dialog */}
+    <div className="space-y-8 animate-fadeIn text-slate-900">
+      {/* Hidden File Input */}
       <input
         type="file"
         ref={fileInputRef}
@@ -190,20 +257,30 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       />
 
       {/* Header */}
-      <div className="border-b border-gray-200 pb-5">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#eef8f3] text-[#3d9970] text-xs font-bold mb-2">
-          <Sparkles className="w-4 h-4" />
-          <span>Echtzeit-Belegprüfung & Live-Scan Engine</span>
+      <div className="border-b border-slate-200 pb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-[#3d9970] text-xs font-bold mb-2 border border-emerald-200">
+            <Sparkles className="w-4 h-4 text-[#3d9970]" />
+            <span>KlarSolution Neural 3-Way Matching Engine</span>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">Multimodale Belegprüfung & Forensik</h1>
+          <p className="text-xs text-slate-500 mt-1">
+            Automatisierter Abgleich von Belegbildern/PDFs mit Purchase Order JSON zur Aufdeckung von Preiskorrekturen, Mengendifferenzen und Schweizer MWST-Fehlern.
+          </p>
         </div>
-        <h1 className="text-2xl font-serif font-bold text-[#142032]">Beleg-Upload & Live Scan</h1>
-        <p className="text-xs text-gray-500 mt-1">
-          Laden Sie Belege hoch oder starten Sie das Test-Paket für eine automatische 4-Stufen-Analyse (1. OCR-Texterkennung → 2. Claude 3.5 Extraktion → 3. 3-Wege-Abgleich → 4. KI-Abweichungserkennung).
-        </p>
+
+        <button
+          type="button"
+          onClick={() => setRawJsonView(!rawJsonView)}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white font-extrabold text-xs hover:bg-slate-800 transition-colors shadow-sm self-start md:self-auto"
+        >
+          <Code2 className="w-4 h-4 text-emerald-400" />
+          <span>{rawJsonView ? 'Visuelle Ansicht' : 'Raw JSON Schema'}</span>
+        </button>
       </div>
 
-      {/* Drag and Drop Dropzone & Test-Paket Laden Button */}
+      {/* Drag & Drop Dropzone */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Dropzone */}
         <div
           onClick={handleDropzoneClick}
           onDragOver={(e) => {
@@ -224,36 +301,36 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
           }}
           className={`md:col-span-2 border-2 border-dashed rounded-3xl p-8 text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
             dragActive
-              ? 'border-[#3d9970] bg-[#eef8f3] scale-[1.01]'
-              : 'border-gray-300 bg-white hover:border-[#3d9970] hover:bg-gray-50/50'
+              ? 'border-[#3d9970] bg-emerald-50 scale-[1.01]'
+              : 'border-slate-300 bg-white hover:border-[#3d9970] hover:bg-slate-50/50'
           }`}
         >
-          <div className="w-14 h-14 rounded-2xl bg-[#08271e] text-white flex items-center justify-center mb-3 shadow-md group-hover:scale-105 transition-transform">
+          <div className="w-14 h-14 rounded-2xl bg-[#08271e] text-white flex items-center justify-center mb-3 shadow-md">
             <Upload className="w-7 h-7 text-[#3d9970]" />
           </div>
-          <h3 className="font-extrabold text-sm text-[#142032] mb-1">
-            Rechnungen hier hineinziehen oder klicken (PDF, PNG, JPG)
+          <h3 className="font-extrabold text-sm text-slate-900 mb-1">
+            Rechnung uploaden oder ziehen (PDF, Image)
           </h3>
-          <p className="text-xs text-gray-500 max-w-sm">
-            Klicken Sie hier, um Dateien auszuwählen, oder ziehen Sie Belege direkt hinein.
+          <p className="text-xs text-slate-500 max-w-sm">
+            Klicken Sie, um Belege hochzuladen. Startet automatisch den neuralen 3-Wege-Abgleich mit PO-2026-992.
             {uploadedFileName && (
               <span className="block mt-2 font-bold text-[#3d9970]">
-                Zuletzt geladen: {uploadedFileName}
+                Analysiert: {uploadedFileName}
               </span>
             )}
           </p>
         </div>
 
-        {/* Test-Paket Laden Action Card */}
-        <div className="bg-gradient-to-br from-[#08271e] to-[#142032] text-white rounded-3xl p-6 flex flex-col justify-between shadow-xl border border-white/10">
+        {/* Action Panel */}
+        <div className="bg-gradient-to-br from-[#08271e] to-slate-900 text-white rounded-3xl p-6 flex flex-col justify-between shadow-xl border border-white/10">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#3d9970]/30 text-[#86c8aa] text-[10px] font-extrabold uppercase mb-2">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 text-[10px] font-extrabold uppercase mb-2 border border-emerald-800">
               <Sparkles className="w-3 h-3" />
-              <span>Demopaket</span>
+              <span>Neural 3-Way Engine</span>
             </div>
-            <h3 className="font-extrabold text-base text-white">Test-Paket Laden</h3>
-            <p className="text-xs text-gray-300 mt-1 leading-relaxed">
-              Führt die 4-Stufen-Prüfung aus, aktualisiert die Rechnungstabelle & schlägt Kreditansprüche vor.
+            <h3 className="font-extrabold text-base text-white">Forensische Live-Analyse</h3>
+            <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+              Prüft Beleg gegen Purchase Order, validiert Schweizer 8.1% MWST und errechnet verhinderte Kostenverluste.
             </p>
           </div>
 
@@ -268,20 +345,20 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
             ) : (
               <FileCheck2 className="w-4 h-4 text-white" />
             )}
-            <span>{scanning ? 'Scan läuft...' : 'Test-Paket laden & scannen'}</span>
+            <span>{scanning ? 'Neural Audit läuft...' : 'PO-2026-992 Forensik ausführen'}</span>
           </button>
         </div>
       </div>
 
       {/* 4-Step Animated Scan Progress Bar */}
       {scanning && (
-        <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-md space-y-4 animate-fadeIn">
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-md space-y-4 animate-fadeIn">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-[#142032] uppercase tracking-wider flex items-center gap-2">
+            <span className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
               <RefreshCw className="w-4 h-4 text-[#3d9970] animate-spin" />
-              4-Stufen Live-Scan Simulation aktiv...
+              Multimodale Forensische Analyse aktiv...
             </span>
-            <span className="text-xs font-mono font-bold text-[#3d9970]">Schritt {scanStep} von 4</span>
+            <span className="text-xs font-mono font-bold text-[#3d9970]">Stufe {scanStep} / 4</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -292,8 +369,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
                   scanStep === s.num
                     ? 'bg-[#08271e] text-white border-[#08271e] shadow-lg scale-[1.02]'
                     : scanStep > s.num
-                    ? 'bg-[#eef8f3] text-[#2d7d5d] border-[#d6ebe1]'
-                    : 'bg-gray-50 text-gray-400 border-gray-200'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-slate-50 text-slate-400 border-slate-200'
                 }`}
               >
                 <div className="font-extrabold mb-1 flex items-center justify-between">
@@ -308,9 +385,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       )}
 
       {/* Preset Selectors */}
-      <div className="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm space-y-3">
-        <span className="text-xs font-bold text-gray-500 block uppercase tracking-wider">
-          Muster-Rechnungen für detaillierte Manuelle Prüfung wählen:
+      <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
+        <span className="text-xs font-bold text-slate-500 block uppercase tracking-wider">
+          Muster-Purchase Orders für 3-Way Reconciliation auswählen:
         </span>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {samplePresets.map((preset, idx) => (
@@ -321,157 +398,182 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
               className={`p-3.5 rounded-2xl border text-left text-xs font-semibold transition-all ${
                 selectedPresetIndex === idx
                   ? 'bg-[#08271e] text-white border-[#08271e] shadow-md'
-                  : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
               }`}
             >
               <span className="block font-bold mb-1">{preset.title}</span>
-              <span className="text-[11px] opacity-80 block truncate">{preset.supplier}</span>
+              <span className="text-[11px] opacity-80 block truncate font-mono">{preset.supplierName} ({preset.poNumber})</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Inputs & Audit Trigger */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-6 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
-          <h3 className="font-bold text-base text-[#142032] border-b border-gray-100 pb-3">
-            Rechnungsdaten & Freitext-Positionen
-          </h3>
-
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div>
-              <label className="block font-bold text-gray-600 mb-1">Lieferant</label>
-              <input
-                type="text"
-                value={supplierInput}
-                onChange={(e) => setSupplierInput(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-gray-200 text-xs font-semibold"
-              />
+      {/* Main Forensic Output Display */}
+      {auditOutput && (
+        <div className="space-y-6 animate-fadeIn">
+          {rawJsonView ? (
+            /* RAW JSON Output View matching exact user schema */
+            <div className="bg-slate-950 text-emerald-400 p-6 rounded-3xl border border-slate-800 shadow-2xl space-y-3 font-mono text-xs overflow-x-auto relative">
+              <div className="flex justify-between items-center text-slate-400 border-b border-slate-800 pb-2 mb-3 font-sans">
+                <span className="font-bold flex items-center gap-2">
+                  <Code2 className="w-4 h-4 text-emerald-400" />
+                  <span>Strict JSON Response Schema (Audit Output)</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(JSON.stringify(auditOutput, null, 2));
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="px-3 py-1 rounded bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1 transition-colors"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copied ? 'JSON kopiert' : 'JSON kopieren'}</span>
+                </button>
+              </div>
+              <pre className="text-emerald-300 leading-relaxed">
+                {JSON.stringify(auditOutput, null, 2)}
+              </pre>
             </div>
-            <div>
-              <label className="block font-bold text-gray-600 mb-1">Rechnungs-Nr.</label>
-              <input
-                type="text"
-                value={invoiceNoInput}
-                onChange={(e) => setInvoiceNoInput(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-gray-200 text-xs font-semibold font-mono"
-              />
-            </div>
-            <div>
-              <label className="block font-bold text-gray-600 mb-1">Datum</label>
-              <input
-                type="text"
-                value={dateInput}
-                onChange={(e) => setDateInput(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-gray-200 text-xs font-semibold"
-              />
-            </div>
-            <div>
-              <label className="block font-bold text-gray-600 mb-1">Rechnungsbetrag</label>
-              <input
-                type="text"
-                value={amountInput}
-                onChange={(e) => setAmountInput(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-gray-200 text-xs font-semibold font-mono"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-600 mb-1">Positionsdaten / OCR-Text</label>
-            <textarea
-              rows={4}
-              value={itemsTextInput}
-              onChange={(e) => setItemsTextInput(e.target.value)}
-              className="w-full p-3 rounded-xl border border-gray-200 text-xs font-mono"
-            />
-          </div>
-
-          <button
-            type="button"
-            disabled={scanning}
-            onClick={() => handleRun4StepSimulation()}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#245f49] to-[#3d9970] hover:from-[#1a4a38] hover:to-[#2f8a68] text-white font-extrabold text-sm shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            <Sparkles className="w-4 h-4 text-white" />
-            <span>4-Stufen KI-Scan starten</span>
-          </button>
-        </div>
-
-        {/* Scan Results Display */}
-        <div className="lg:col-span-6 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
-          <h3 className="font-bold text-base text-[#142032] border-b border-gray-100 pb-3 flex justify-between items-center">
-            <span>Audit-Ergebnis der Belegprüfung</span>
-            {scanResult && (
-              <span className="text-xs font-bold text-[#3d9970] bg-[#eef8f3] px-2.5 py-1 rounded-full">
-                Confidence: {scanResult.confidenceScorePct}%
-              </span>
-            )}
-          </h3>
-
-          {!scanResult && !scanning && (
-            <div className="py-12 text-center text-gray-400 space-y-2">
-              <ScanLine className="w-12 h-12 mx-auto text-gray-300" />
-              <p className="text-xs font-medium">Klicken Sie oben auf "Test-Paket laden" oder "4-Stufen KI-Scan starten".</p>
-            </div>
-          )}
-
-          {scanResult && (
-            <div className="space-y-4 text-xs">
-              {/* Finding Status Box */}
-              <div
-                className={`p-4 rounded-2xl border ${
-                  scanResult.discrepancyFound
-                    ? 'bg-[#fff3e6] border-[#f5d0bc] text-[#8a5a10]'
-                    : 'bg-[#eef8f3] border-[#d6ebe1] text-[#2d7d5d]'
-                }`}
-              >
-                <div className="flex items-center gap-2 font-extrabold text-sm mb-1">
-                  {scanResult.discrepancyFound ? (
-                    <AlertTriangle className="w-5 h-5 text-[#df6029]" />
-                  ) : (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  )}
-                  <span>{scanResult.discrepancyType || 'Abweichung Erkannt'}</span>
-                </div>
-                <p className="font-medium text-gray-800 leading-relaxed">{scanResult.summary}</p>
-                {scanResult.overchargeAmountCHF > 0 && (
-                  <div className="mt-2 text-sm font-extrabold font-mono text-[#df6029]">
-                    Kostenverlust: + CHF {scanResult.overchargeAmountCHF.toFixed(2)}
+          ) : (
+            /* Visually Rich Forensic Accounting Dashboard Display */
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Column: Audit Summary & Discrepancy Breakdown */}
+              <div className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-lg space-y-6">
+                {/* Status Header */}
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${
+                        auditOutput.audit_status === 'FLAGGED'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                          : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      }`}
+                    >
+                      <AlertTriangle className="w-4 h-4 text-amber-600" />
+                      <span>Audit Status: {auditOutput.audit_status}</span>
+                    </span>
                   </div>
-                )}
+
+                  <div className="text-right">
+                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+                      Verhinderter Finanzschaden
+                    </span>
+                    <span className="text-xl font-extrabold text-amber-600 font-mono">
+                      + CHF {auditOutput.total_financial_loss_prevented_chf.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Supplier Information Card */}
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-900">{auditOutput.supplier.name}</span>
+                    <span className="px-2 py-0.5 rounded bg-emerald-100 text-[#2d5c46] font-bold text-[10px]">
+                      Confidence Score: {(auditOutput.supplier.confidence_score * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="text-slate-500 font-mono text-[11px]">
+                    IBAN: {auditOutput.supplier.iban} (Schweizer Clearing Verifiziert)
+                  </div>
+                </div>
+
+                {/* Discrepancies Table */}
+                <div className="space-y-3">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">
+                    Aufgedeckte Unstimmigkeiten ({auditOutput.discrepancies_found.length}):
+                  </h4>
+
+                  <div className="space-y-3">
+                    {auditOutput.discrepancies_found.map((disc, i) => (
+                      <div
+                        key={i}
+                        className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 text-xs space-y-2"
+                      >
+                        <div className="flex justify-between items-center font-bold">
+                          <span className="px-2 py-0.5 rounded bg-amber-200 text-amber-900 text-[10px]">
+                            {disc.type}
+                          </span>
+                          <span className="font-mono text-amber-700 font-extrabold">
+                            Impact: + CHF {disc.financial_impact_chf.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="font-extrabold text-slate-900">{disc.item}</div>
+                        <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 pt-1 border-t border-amber-100">
+                          <div>
+                            <span className="text-slate-400 block">Soll (PO / Vertraulich):</span>
+                            <span className="font-mono font-bold text-emerald-700">{disc.expected}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block">Ist (Rechnung Beleg):</span>
+                            <span className="font-mono font-bold text-amber-800">{disc.actual}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              {/* Template Output */}
-              {scanResult.disputeLetterTemplate && (
-                <div className="space-y-2 pt-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-gray-700">Erstellter Reklamationstext (OR Art. 82/107):</span>
+              {/* Right Column: Draft Dispute Letter (German) */}
+              <div className="lg:col-span-5 bg-slate-900 text-white p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-lg space-y-4 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <span className="font-bold text-xs uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-emerald-400" />
+                      <span>Kaufmännische Mängelrüge (OR Art. 82)</span>
+                    </span>
+
                     <button
                       type="button"
                       onClick={() => {
-                        navigator.clipboard.writeText(scanResult.disputeLetterTemplate);
+                        navigator.clipboard.writeText(auditOutput.draft_dispute_letter_de);
                         setCopied(true);
-                        setTimeout(() => setCopied(false), 2500);
+                        setTimeout(() => setCopied(false), 2000);
                       }}
-                      className="px-2.5 py-1 rounded bg-[#3d9970] text-white text-[11px] font-bold flex items-center gap-1"
+                      className="px-2.5 py-1 rounded bg-[#3d9970] text-white text-[11px] font-bold flex items-center gap-1 hover:bg-[#2f8a68] transition-colors"
                     >
                       {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                      <span>{copied ? 'Kopiert!' : 'Kopieren'}</span>
+                      <span>{copied ? 'Kopiert' : 'Kopieren'}</span>
                     </button>
                   </div>
+
+                  <p className="text-[11px] text-slate-400">
+                    Generiertes Schreiben für das Lieferanten-Debi-Team in Deutsch nach Schweizer Obligationenrecht:
+                  </p>
+
                   <textarea
                     readOnly
-                    rows={6}
-                    value={scanResult.disputeLetterTemplate}
-                    className="w-full p-3 rounded-xl border border-gray-200 text-xs font-mono bg-gray-50 text-gray-800"
+                    rows={12}
+                    value={auditOutput.draft_dispute_letter_de}
+                    className="w-full p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-200 leading-relaxed outline-none focus:border-emerald-500"
                   />
                 </div>
-              )}
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const blob = new Blob([auditOutput.draft_dispute_letter_de], { type: 'text/plain;charset=utf-8' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `Maengelruege_${currentPreset.supplierName.replace(/\s+/g, '_')}_${currentPreset.invoiceNumber}.txt`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Mängelrüge als TXT herunterladen</span>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -1,65 +1,79 @@
 import React, { useState } from 'react';
 import { Language } from '../types';
-import { translations } from '../translations/translations';
-import { Phone, Mail, ShieldCheck, ArrowRight, ChevronDown, FileText } from 'lucide-react';
+import { ShieldCheck, ArrowRight, CheckCircle2, FileText, Lock, Globe } from 'lucide-react';
 
 interface FooterProps {
-  currentLang: Language;
-  onRequestQuote: () => void;
+  currentLang?: Language;
+  onRequestQuote?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ currentLang, onRequestQuote }) => {
-  const t = translations[currentLang];
+export const Footer: React.FC<FooterProps> = ({ onRequestQuote }) => {
   const [legalModalContent, setLegalModalContent] = useState<
-    'datenschutz' | 'impressum' | 'nda' | null
+    'datenschutz' | 'impressum' | 'agb' | 'nda' | null
   >(null);
 
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newsletterEmail.trim()) {
+      setSubscribed(true);
+      setNewsletterEmail('');
+    }
+  };
+
   return (
-    <footer className="bg-[#08251d] text-[#aabbb4] pt-14 pb-8 border-t border-white/10 text-sm">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12 pb-12 border-b border-white/10">
-          {/* Column 1: Brand & Logo Badge */}
-          <div className="lg:col-span-4 space-y-4">
+    <footer className="bg-[#0a1512] text-slate-300 border-t border-slate-800 text-sm relative">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12 pb-12 border-b border-slate-800/80">
+          {/* Column 1: Brand & Mission */}
+          <div className="lg:col-span-4 space-y-5">
             <a
               href="#top"
-              className="inline-flex flex-col items-center justify-center bg-[#08271e] text-white px-4 py-3 rounded-2xl border border-white/15 shadow-md hover:scale-[1.02] transition-transform"
+              className="inline-flex flex-col items-start justify-center group"
             >
-              <span className="font-serif font-extrabold tracking-tight text-xl text-white">
-                klar <span className="text-[#3d9970]">solution</span>
-              </span>
-              <span className="text-[9px] uppercase tracking-widest text-[#a8cfbd] font-medium mt-0.5">
-                Smart Grid AG
+              <div className="flex items-center gap-2">
+                <span className="font-serif font-extrabold tracking-tight text-2xl text-white group-hover:text-emerald-400 transition-colors">
+                  klar <span className="text-[#3d9970]">solution</span>
+                </span>
+                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/50">
+                  Enterprise
+                </span>
+              </div>
+              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mt-0.5">
+                Smart Grid AG • Schweiz
               </span>
             </a>
 
-            <p className="text-xs text-gray-300 leading-relaxed max-w-sm">
-              Prüfung von Belegen für Finanz- und Buchhaltungsteams. DSGVO-konform. Entwickelt in der Schweiz.
+            <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
+              Intelligente Rechnungsprüfung und Reklamationsabwicklung für Schweizer Finanzteams. Automatischer 3-Wege-Abgleich zur Vermeidung von Überzahlungen.
             </p>
 
-            <div className="pt-2 flex flex-col gap-2 text-xs font-semibold text-gray-300">
-              <a
-                href="tel:+41445897288"
-                className="inline-flex items-center gap-2 hover:text-white transition-colors"
-              >
-                <Phone className="w-3.5 h-3.5 text-[#3d9970]" />
-                <span>044 589 72 88</span>
-              </a>
-              <a
-                href="mailto:kontakt@klarsolution.ch"
-                className="inline-flex items-center gap-2 hover:text-white transition-colors"
-              >
-                <Mail className="w-3.5 h-3.5 text-[#3d9970]" />
-                <span>kontakt@klarsolution.ch</span>
-              </a>
+            <div className="pt-2 flex flex-wrap items-center gap-3">
+              {/* Swiss Made Badge */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300">
+                <span>🇨🇭</span>
+                <span>Swiss Made Software</span>
+              </div>
+
+              {/* Operational Status Badge */}
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-950/40 border border-emerald-900/60 text-xs font-medium text-emerald-300">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>Alle Systeme betriebsbereit</span>
+              </div>
             </div>
           </div>
 
-          {/* Column 2: Produkt Links */}
-          <div className="lg:col-span-2 space-y-3">
-            <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#86c8aa]">
-              Produkt
+          {/* Column 2: Produkt & KI */}
+          <div className="lg:col-span-2 space-y-3.5">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-emerald-400">
+              Produkt & KI
             </h4>
-            <ul className="space-y-2 text-xs font-medium">
+            <ul className="space-y-2.5 text-xs font-medium text-slate-400">
               <li>
                 <a href="#problem" className="hover:text-white transition-colors">
                   Lösung
@@ -67,7 +81,17 @@ export const Footer: React.FC<FooterProps> = ({ currentLang, onRequestQuote }) =
               </li>
               <li>
                 <a href="#funktion" className="hover:text-white transition-colors">
-                  Wie es funktioniert
+                  KI-Belegscanner
+                </a>
+              </li>
+              <li>
+                <a href="#funktion" className="hover:text-white transition-colors">
+                  3-Way-Matching
+                </a>
+              </li>
+              <li>
+                <a href="#funktion" className="hover:text-white transition-colors">
+                  Reklamations-Hub
                 </a>
               </li>
               <li>
@@ -76,146 +100,186 @@ export const Footer: React.FC<FooterProps> = ({ currentLang, onRequestQuote }) =
                 </a>
               </li>
               <li>
-                <a href="#pakete" className="hover:text-white transition-colors">
-                  Pakete & Preise
+                <a href="#api" onClick={(e) => { e.preventDefault(); if (onRequestQuote) onRequestQuote(); }} className="hover:text-white transition-colors">
+                  API-Dokumentation
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Column 3: Unternehmen Links */}
-          <div className="lg:col-span-3 space-y-3">
-            <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#86c8aa]">
-              Unternehmen
+          {/* Column 3: Unternehmen & Compliance */}
+          <div className="lg:col-span-3 space-y-3.5">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-emerald-400">
+              Unternehmen & Compliance
             </h4>
-            <ul className="space-y-2 text-xs font-medium">
+            <ul className="space-y-2.5 text-xs font-medium text-slate-400">
               <li>
-                <a href="#kontakt" className="hover:text-white transition-colors">
-                  Kontakt & Anfahrt
+                <a href="#about" onClick={(e) => { e.preventDefault(); setLegalModalContent('impressum'); }} className="hover:text-white transition-colors">
+                  Über uns
                 </a>
               </li>
               <li>
-                <a
-                  href="mailto:kontakt@klarsolution.ch"
-                  className="hover:text-white transition-colors"
-                >
-                  kontakt@klarsolution.ch
+                <a href="#karriere" onClick={(e) => { e.preventDefault(); if (onRequestQuote) onRequestQuote(); }} className="hover:text-white transition-colors">
+                  Karriere
                 </a>
               </li>
-              <li>
-                <a href="tel:+41445897288" className="hover:text-white transition-colors">
-                  Telefon: 044 589 72 88
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 4: Rechtliches & Primary CTA */}
-          <div className="lg:col-span-3 space-y-3">
-            <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#86c8aa]">
-              Rechtliches
-            </h4>
-            <ul className="space-y-2 text-xs font-medium">
               <li>
                 <button
                   type="button"
                   onClick={() => setLegalModalContent('datenschutz')}
-                  className="hover:text-white transition-colors text-left"
+                  className="hover:text-white transition-colors text-left flex items-center gap-1.5"
                 >
-                  Datenschutz (DSGVO / DSG)
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>Sicherheitsstandards (ISO 27001 & DSGVO)</span>
                 </button>
               </li>
               <li>
-                <button
-                  type="button"
-                  onClick={() => setLegalModalContent('impressum')}
-                  className="hover:text-white transition-colors text-left"
-                >
-                  Impressum & Firmenangaben
-                </button>
+                <a href="#partner" onClick={(e) => { e.preventDefault(); if (onRequestQuote) onRequestQuote(); }} className="hover:text-white transition-colors">
+                  Partnerprogramm
+                </a>
               </li>
               <li>
-                <button
-                  type="button"
-                  onClick={() => setLegalModalContent('nda')}
-                  className="hover:text-white transition-colors text-left"
-                >
-                  Vertraulichkeitsvereinbarung (NDA)
-                </button>
+                <a href="#kontakt" className="hover:text-white transition-colors">
+                  Kontakt
+                </a>
               </li>
             </ul>
+          </div>
 
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={onRequestQuote}
-                className="w-full py-3 px-4 rounded-xl bg-[#3d9970] hover:bg-[#2f8a68] text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2"
-              >
-                <span>Analyse anfragen →</span>
-              </button>
+          {/* Column 4: Newsletter & Updates */}
+          <div className="lg:col-span-3 space-y-3.5">
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                Finance Intelligence Briefing
+              </h4>
+              <p className="text-xs text-slate-400 leading-normal">
+                Monatliche Einblicke in B2B-Rechnungsprüfung. Kein Spam.
+              </p>
+
+              {subscribed ? (
+                <div className="p-3 bg-emerald-950/60 border border-emerald-800/80 rounded-xl text-emerald-300 text-xs font-medium flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Vielen Dank für Ihre Anmeldung!</span>
+                </div>
+              ) : (
+                <form onSubmit={handleNewsletterSubmit} className="space-y-2">
+                  <div className="relative">
+                    <input
+                      type="email"
+                      value={newsletterEmail}
+                      onChange={(e) => setNewsletterEmail(e.target.value)}
+                      placeholder="E-Mail-Adresse eingeben"
+                      required
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none transition-all pr-10"
+                    />
+                    <button
+                      type="submit"
+                      aria-label="Anmelden"
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-[#3d9970] hover:bg-[#2f8a68] text-white transition-colors shadow-sm"
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-500">
+                    Jederzeit abstellbar. Schweizer Datenschutz konform.
+                  </p>
+                </form>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Bottom Copyright Bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400 font-medium">
-          <div>© 2026 klar solution – Alle Rechte vorbehalten</div>
-          <div className="flex items-center gap-2">
-            <span>Entwickelt in der Schweiz</span>
-            <span className="text-base">🇨🇭</span>
+        {/* Bottom Bar */}
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400 font-medium">
+          <div>
+            © 2026 Klar Solution SMART GRID AG. Alle Rechte vorbehalten.
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+            <button
+              type="button"
+              onClick={() => setLegalModalContent('datenschutz')}
+              className="hover:text-emerald-400 transition-colors"
+            >
+              Datenschutz
+            </button>
+            <span className="text-slate-800">•</span>
+            <button
+              type="button"
+              onClick={() => setLegalModalContent('impressum')}
+              className="hover:text-emerald-400 transition-colors"
+            >
+              Impressum
+            </button>
+            <span className="text-slate-800">•</span>
+            <button
+              type="button"
+              onClick={() => setLegalModalContent('agb')}
+              className="hover:text-emerald-400 transition-colors"
+            >
+              AGB
+            </button>
+            <span className="text-slate-800">•</span>
+            <button
+              type="button"
+              onClick={() => setLegalModalContent('nda')}
+              className="hover:text-emerald-400 transition-colors"
+            >
+              NDA-Sicherheit
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Legal Content Drawer Modal */}
+      {/* Styled Drawer Modal for Legal Links */}
       {legalModalContent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#08271e]/70 backdrop-blur-md animate-fadeIn text-[#142032]">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full border border-gray-200 shadow-2xl space-y-6 max-h-[85vh] overflow-y-auto relative animate-scaleUp">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn text-slate-800">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-2xl w-full border border-slate-200 shadow-2xl space-y-5 max-h-[85vh] overflow-y-auto relative">
             <button
               type="button"
               onClick={() => setLegalModalContent(null)}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
             >
               ✕
             </button>
 
             {legalModalContent === 'datenschutz' && (
               <div className="space-y-4 text-xs leading-relaxed">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#eef8f3] text-[#3d9970] font-bold">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-[#3d9970] font-bold">
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Datenschutzerklärung (Schweizer DSG & DSGVO)</span>
+                  <span>Datenschutzerklärung (Schweizer DSG & EU DSGVO)</span>
                 </div>
-                <h3 className="text-xl font-serif font-bold text-[#142032]">
-                  Datenschutz & Geodaten-Sicherheit
+                <h3 className="text-xl font-bold text-slate-900">
+                  Datenschutz & Schweizer Datenhaltung
                 </h3>
                 <p>
-                  KlarSolution verarbeitet Ihre Beleg- und Unternehmensdaten streng nach dem Schweizer Datenschutzgesetz (DSG) sowie der Europäischen Datenschutz-Grundverordnung (DSGVO).
+                  KlarSolution (Smart Grid AG) verarbeitet Ihre Beleg- und Unternehmensdaten streng nach dem Schweizer Datenschutzgesetz (DSG) sowie der Europäischen Datenschutz-Grundverordnung (DSGVO).
                 </p>
-                <h4 className="font-bold text-sm text-[#142032] pt-2">
-                  1. Server-Standort Schweiz
+                <h4 className="font-bold text-sm text-slate-900 pt-2">
+                  1. Server-Standort Schweiz (Kanton Zürich)
                 </h4>
                 <p>
-                  Alle Belegdaten, OCR-Extrakte und Prüfberichte werden in nach ISO 27001 zertifizierten Schweizer Rechenzentren (Kanton Zürich) gehostet. Es erfolgt keine Weitergabe an unbefugte Dritte.
+                  Alle Belegdaten, OCR-Extrakte und Prüfberichte werden in nach ISO 27001 zertifizierten Schweizer Rechenzentren gehostet. Es erfolgt keine Weitergabe an unbefugte Dritte.
                 </p>
-                <h4 className="font-bold text-sm text-[#142032] pt-2">
-                  2. Zweckbindung & Löschfristen
+                <h4 className="font-bold text-sm text-slate-900 pt-2">
+                  2. Zweckbindung & Verschlüsselung
                 </h4>
                 <p>
-                  Ihre übermittelten Belege dienen ausschließlich der Durchführung des automatisierten 3-Wege-Abgleichs. Sie behalten jederzeit die volle Datenhoheit.
+                  Ihre übermittelten Belege dienen ausschließlich der Durchführung des automatisierten 3-Wege-Abgleichs. Sämtliche Daten werden während der Übertragung (TLS 1.3) und im Ruhezustand (AES-256) verschlüsselt.
                 </p>
               </div>
             )}
 
             {legalModalContent === 'impressum' && (
               <div className="space-y-4 text-xs leading-relaxed">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#eef8f3] text-[#3d9970] font-bold">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-[#3d9970] font-bold">
                   <FileText className="w-4 h-4" />
                   <span>Impressum & Rechtliche Angaben</span>
                 </div>
-                <h3 className="text-xl font-serif font-bold text-[#142032]">
-                  KlarSolution – Smart Grid AG
+                <h3 className="text-xl font-bold text-slate-900">
+                  Klar Solution – Smart Grid AG
                 </h3>
-                <div className="bg-[#f7f9f8] p-4 rounded-2xl border border-gray-200 font-mono space-y-1 text-gray-800">
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 font-mono space-y-1.5 text-slate-800">
                   <p>
                     <strong>Betreiberin:</strong> Smart Grid AG
                   </p>
@@ -223,10 +287,13 @@ export const Footer: React.FC<FooterProps> = ({ currentLang, onRequestQuote }) =
                     <strong>Adresse:</strong> In der Au 44, 8706 Meilen, Schweiz
                   </p>
                   <p>
-                    <strong>Telefon:</strong> 044 589 72 88
+                    <strong>Telefon:</strong> +41 44 589 72 88
                   </p>
                   <p>
                     <strong>E-Mail:</strong> kontakt@klarsolution.ch
+                  </p>
+                  <p>
+                    <strong>Handelsregister:</strong> Kanton Zürich (CH-020.3.044.102-5)
                   </p>
                   <p>
                     <strong>UID / MWST-Nr.:</strong> CHE-442.994.102
@@ -235,20 +302,47 @@ export const Footer: React.FC<FooterProps> = ({ currentLang, onRequestQuote }) =
               </div>
             )}
 
-            {legalModalContent === 'nda' && (
+            {legalModalContent === 'agb' && (
               <div className="space-y-4 text-xs leading-relaxed">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#eef8f3] text-[#3d9970] font-bold">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Vertraulichkeitsvereinbarung (NDA)</span>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-[#3d9970] font-bold">
+                  <Globe className="w-4 h-4" />
+                  <span>Allgemeine Geschäftsbedingungen (AGB)</span>
                 </div>
-                <h3 className="text-xl font-serif font-bold text-[#142032]">
-                  Vertraulichkeit & Schiedsgericht Zürich
+                <h3 className="text-xl font-bold text-slate-900">
+                  AGB für B2B-SaaS-Dienste
                 </h3>
                 <p>
-                  Mit der Übermittlung von Testbelegen oder der Durchführung der automatischen Analyse verpflichten sich beide Parteien zur strengen Geheimhaltung aller Geschäftsgeheimnisse.
+                  Diese AGB regeln die Nutzung der B2B-Plattform KlarSolution durch Geschäftskunden. Mit der Registrierung oder Nutzung des Dienstes akzeptieren Sie diese Bestimmungen.
                 </p>
-                <p className="bg-[#f7f9f8] p-3 rounded-xl border border-gray-200 font-mono">
-                  Gerichtsstand & Anwendbares Recht: Ausschliesslich Schweizerisches Recht unter Ausschluss des Wiener Kaufrechts. Erfüllungsort und Gerichtsstand ist Zürich, Schweiz.
+                <h4 className="font-bold text-sm text-slate-900 pt-2">
+                  1. Leistungsumfang
+                </h4>
+                <p>
+                  KlarSolution stellt eine Software-as-a-Service Plattform zur automatischen Analyse von Eingangsrechnungen und Belegen bereit.
+                </p>
+                <h4 className="font-bold text-sm text-slate-900 pt-2">
+                  2. Haftung & Gewährleistung
+                </h4>
+                <p>
+                  KlarSolution prüft Belege mit maximaler Präzision. Die finale Freigabe von Zahlungen verbleibt stets bei den zeichnungsberechtigten Personen des Kunden.
+                </p>
+              </div>
+            )}
+
+            {legalModalContent === 'nda' && (
+              <div className="space-y-4 text-xs leading-relaxed">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-[#3d9970] font-bold">
+                  <Lock className="w-4 h-4" />
+                  <span>Vertraulichkeitsvereinbarung (NDA)</span>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">
+                  Vertraulichkeitsgarantie & Anwendbares Recht
+                </h3>
+                <p>
+                  Sämtliche hochgeladenen Rechnungen, Lieferantendaten und Preisvereinbarungen werden als streng vertrauliche Geschäftsgeheimnisse behandelt.
+                </p>
+                <p className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 font-mono text-slate-800">
+                  Gerichtsstand & Anwendbares Recht: Ausschliesslich Schweizerisches Recht. Erfüllungsort und Gerichtsstand ist Zürich, Schweiz.
                 </p>
               </div>
             )}

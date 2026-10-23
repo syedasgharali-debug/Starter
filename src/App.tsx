@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Language, AppView, DashboardView, InvoiceRecord, SupplierRecord, OperationalRole } from './types';
-import { Header } from './components/Header';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useOutletContext,
+} from 'react-router-dom';
+import { Language, InvoiceRecord, SupplierRecord, OperationalRole } from './types';
+import { PublicLayout } from './layouts/PublicLayout';
+import { DashboardLayout } from './layouts/DashboardLayout';
 import { MarqueeBar } from './components/MarqueeBar';
 import { LandingPage } from './components/LandingPage';
-import { KlaraChatbot } from './components/KlaraChatbot';
-import { ContactModal } from './components/ContactModal';
-import { AuthModal } from './components/AuthModal';
-import { SuiteSwitcher } from './components/SuiteSwitcher';
-
-import { DashboardLayout } from './components/Dashboard/DashboardLayout';
 import { OverviewView } from './components/Dashboard/OverviewView';
 import { InvoicesView } from './components/Dashboard/InvoicesView';
 import { ScannerView } from './components/Dashboard/ScannerView';
 import { DisputesView } from './components/Dashboard/DisputesView';
 import { SuppliersView } from './components/Dashboard/SuppliersView';
-import { SettingsView } from './components/Dashboard/SettingsView';
 import { AdminView } from './components/Dashboard/AdminView';
+import { BillingPage } from './pages/dashboard/BillingPage';
+import { BillingProvider } from './context/BillingContext';
 
 import { initialInvoices, initialSuppliers } from './data/sampleData';
 
@@ -27,37 +31,61 @@ export interface UserSession {
   avatarUrl: string;
 }
 
+function LandingPageWrapper({ currentLang }: { currentLang: Language }) {
+  const { handleOpenQuoteWithNotes } = useOutletContext<{
+    handleOpenQuoteWithNotes: (notes?: string) => void;
+  }>();
+
+  return (
+    <LandingPage
+      currentLang={currentLang}
+      onRequestQuoteWithNotes={handleOpenQuoteWithNotes}
+    />
+  );
+}
+
+function OverviewViewWrapper({
+  currentLang,
+  invoices,
+  suppliers,
+}: {
+  currentLang: Language;
+  invoices: InvoiceRecord[];
+  suppliers: SupplierRecord[];
+}) {
+  const navigate = useNavigate();
+
+  return (
+    <OverviewView
+      currentLang={currentLang}
+      invoices={invoices}
+      suppliers={suppliers}
+      onNavigateToView={(view) => navigate(`/dashboard/${view}`)}
+    />
+  );
+}
+
 export default function App() {
   const [currentLang, setCurrentLang] = useState<Language>('de');
-  const [currentView, setCurrentView] = useState<AppView>('landing');
-  const [dashboardTab, setDashboardTab] = useState<DashboardView>('overview');
 
-  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
-  const [quoteNotes, setQuoteNotes] = useState('');
-
-  // Authentication State
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+  // User Session State
   const [userSession, setUserSession] = useState<UserSession>({
     isAuthenticated: true,
     name: 'Ali Kazmi',
     email: 'ali.kazmi@smartgrid.ch',
     role: 'Administrator',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    avatarUrl:
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
   });
 
   const [invoices, setInvoices] = useState<InvoiceRecord[]>(initialInvoices);
   const [suppliers, setSuppliers] = useState<SupplierRecord[]>(initialSuppliers);
 
-  // Sync html dir & lang for RTL/LTR
+  // Sync html dir & lang for RTL/LTR support
   useEffect(() => {
     document.documentElement.lang = currentLang;
     document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
   }, [currentLang]);
-
-  const handleOpenQuoteWithNotes = (notes: string = '') => {
-    setQuoteNotes(notes);
-    setQuoteModalOpen(true);
-  };
 
   const handleAddAuditedInvoice = (newInv: InvoiceRecord) => {
     setInvoices((prev) => [newInv, ...prev]);
@@ -69,9 +97,9 @@ export default function App() {
       name,
       email,
       role,
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      avatarUrl:
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     });
-    setCurrentView('kundenbereich');
   };
 
   const handleSignOut = () => {
@@ -79,7 +107,6 @@ export default function App() {
       ...prev,
       isAuthenticated: false,
     }));
-    setCurrentView('landing');
   };
 
   const handleRoleChange = (newRole: OperationalRole) => {
@@ -90,122 +117,101 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#142032] font-sans selection:bg-[#3d9970] selection:text-white relative">
-      {/* Top Suite Switcher Pill Bar */}
-      <SuiteSwitcher
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        currentLang={currentLang}
-      />
-
-      {/* Global Header */}
-      <Header
-        currentLang={currentLang}
-        onLanguageChange={setCurrentLang}
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        onRequestQuote={() => handleOpenQuoteWithNotes()}
-        isAuthenticated={userSession.isAuthenticated}
-        userName={userSession.name}
-        userEmail={userSession.email}
-        userRole={userSession.role}
-        userAvatarUrl={userSession.avatarUrl}
-        onOpenAuthModal={() => setAuthModalOpen(true)}
-        onSignOut={handleSignOut}
-      />
-
-      {/* Main View Router */}
-      {currentView === 'landing' && (
-        <main>
-          <MarqueeBar currentLang={currentLang} />
-          <LandingPage
-            currentLang={currentLang}
-            onRequestQuoteWithNotes={handleOpenQuoteWithNotes}
-          />
-        </main>
-      )}
-
-      {currentView === 'kundenbereich' && (
-        <DashboardLayout
-          currentLang={currentLang}
-          activeView={dashboardTab}
-          onViewChange={setDashboardTab}
-          onBackToLanding={() => setCurrentView('landing')}
-          activeRole={userSession.role}
-          onRoleChange={handleRoleChange}
-        >
-          {dashboardTab === 'overview' && (
-            <OverviewView
-              currentLang={currentLang}
-              invoices={invoices}
-              suppliers={suppliers}
-              onNavigateToView={(view) => setDashboardTab(view)}
+    <BillingProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Marketing Routes with PublicLayout Wrapper */}
+          <Route
+            path="/"
+            element={
+              <PublicLayout
+                currentLang={currentLang}
+                onLanguageChange={setCurrentLang}
+                isAuthenticated={userSession.isAuthenticated}
+                userName={userSession.name}
+                userEmail={userSession.email}
+                userRole={userSession.role}
+                userAvatarUrl={userSession.avatarUrl}
+                onSignOut={handleSignOut}
+                onLoginSuccess={handleLoginSuccess}
+              />
+            }
+          >
+            <Route
+              index
+              element={
+                <>
+                  <MarqueeBar currentLang={currentLang} />
+                  <LandingPageWrapper currentLang={currentLang} />
+                </>
+              }
             />
-          )}
+          </Route>
 
-          {dashboardTab === 'invoices' && (
-            <InvoicesView currentLang={currentLang} invoices={invoices} />
-          )}
-
-          {dashboardTab === 'scanner' && (
-            <ScannerView
-              currentLang={currentLang}
-              onAddAuditedInvoice={handleAddAuditedInvoice}
+          {/* Isolated SaaS Dashboard Routes with DashboardLayout Wrapper */}
+          <Route
+            path="/dashboard"
+            element={
+              <DashboardLayout
+                currentLang={currentLang}
+                activeRole={userSession.role}
+                onRoleChange={handleRoleChange}
+                userName={userSession.name}
+                userEmail={userSession.email}
+                userAvatarUrl={userSession.avatarUrl}
+                onSignOut={handleSignOut}
+              />
+            }
+          >
+            <Route
+              index
+              element={
+                <OverviewViewWrapper
+                  currentLang={currentLang}
+                  invoices={invoices}
+                  suppliers={suppliers}
+                />
+              }
             />
-          )}
+            <Route
+              path="invoices"
+              element={<InvoicesView currentLang={currentLang} invoices={invoices} />}
+            />
+            <Route
+              path="scanner"
+              element={
+                <ScannerView
+                  currentLang={currentLang}
+                  onAddAuditedInvoice={handleAddAuditedInvoice}
+                />
+              }
+            />
+            <Route
+              path="disputes"
+              element={<DisputesView currentLang={currentLang} invoices={invoices} />}
+            />
+            <Route
+              path="suppliers"
+              element={<SuppliersView currentLang={currentLang} suppliers={suppliers} />}
+            />
+            <Route
+              path="settings"
+              element={<BillingPage currentLang={currentLang} />}
+            />
+            <Route
+              path="billing"
+              element={<BillingPage currentLang={currentLang} />}
+            />
+            <Route
+              path="admin"
+              element={<AdminView currentLang={currentLang} />}
+            />
+          </Route>
 
-          {dashboardTab === 'disputes' && (
-            <DisputesView currentLang={currentLang} invoices={invoices} />
-          )}
-
-          {dashboardTab === 'suppliers' && (
-            <SuppliersView currentLang={currentLang} suppliers={suppliers} />
-          )}
-
-          {dashboardTab === 'settings' && (
-            <SettingsView currentLang={currentLang} />
-          )}
-
-          {dashboardTab === 'admin' && (
-            <AdminView currentLang={currentLang} />
-          )}
-        </DashboardLayout>
-      )}
-
-      {currentView === 'admin-portal' && (
-        <DashboardLayout
-          currentLang={currentLang}
-          activeView="admin"
-          onViewChange={setDashboardTab}
-          onBackToLanding={() => setCurrentView('landing')}
-          activeRole={userSession.role}
-          onRoleChange={handleRoleChange}
-        >
-          <AdminView currentLang={currentLang} />
-        </DashboardLayout>
-      )}
-
-      {/* Floating Klara AI Assistant Chatbot */}
-      <KlaraChatbot
-        currentLang={currentLang}
-        onRequestQuote={() => handleOpenQuoteWithNotes()}
-      />
-
-      {/* Audit Quote Request Modal */}
-      <ContactModal
-        isOpen={quoteModalOpen}
-        onClose={() => setQuoteModalOpen(false)}
-        currentLang={currentLang}
-        prefilledNotes={quoteNotes}
-      />
-
-      {/* Auth / Google Sign-In Modal */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        currentLang={currentLang}
-        onLoginSuccess={handleLoginSuccess}
-      />
-    </div>
+          {/* Catch-All Fallback Redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </BillingProvider>
   );
 }

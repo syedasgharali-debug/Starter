@@ -61,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
     <>
       {/* Floating Blurred Sticky Navigation Header */}
       <div className="sticky top-4 z-50 max-w-6xl mx-auto px-4 sm:px-6 transition-all">
-        <header className="backdrop-blur-md bg-white/85 border border-slate-200/80 shadow-lg shadow-slate-900/5 rounded-full px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 sm:gap-6">
+        <header className="backdrop-blur-md bg-gradient-to-r from-emerald-50/95 via-emerald-50/80 to-emerald-100/70 border border-emerald-200/80 shadow-lg shadow-emerald-950/5 rounded-full px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 sm:gap-6">
           {/* Brand Logo */}
           <a
             href="#top"

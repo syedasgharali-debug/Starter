@@ -55,7 +55,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
   const currentRouteName = routeNames[location.pathname] || 'Dashboard';
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-xs">
+    <header className="h-16 bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/60 border-b border-emerald-100 px-4 sm:px-6 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-2xs">
       {/* Left Breadcrumbs */}
       <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
         <span className="text-slate-400">Kundenbereich</span>

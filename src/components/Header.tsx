@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Language, AppView, OperationalRole } from '../types';
 import { translations } from '../translations/translations';
 import { Phone, LayoutDashboard, Globe, Menu, X, LogIn, LogOut, Sparkles } from 'lucide-react';
+import { Logo } from './Logo';
 
 interface HeaderProps {
   currentLang: Language;
@@ -59,37 +60,17 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      {/* Floating Blurred Sticky Navigation Header */}
-      <div className="sticky top-4 z-50 max-w-6xl mx-auto px-4 sm:px-6 transition-all">
-        <header className="backdrop-blur-md bg-gradient-to-r from-emerald-50/95 via-emerald-50/80 to-emerald-100/70 border border-emerald-200/80 shadow-lg shadow-emerald-950/5 rounded-full px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 sm:gap-6">
-          {/* Brand Logo */}
-          <a
-            href="#top"
-            onClick={(e) => {
-              if (currentView !== 'landing') {
-                e.preventDefault();
-                onViewChange('landing');
-              }
-            }}
-            className="flex items-center gap-2 group shrink-0"
-            aria-label="klar solution homepage"
-          >
-            <div className="w-8 h-8 rounded-full bg-[#08271e] flex items-center justify-center font-extrabold text-white text-xs shadow-md group-hover:bg-[#3d9970] transition-colors">
-              KS
-            </div>
-            <div className="flex flex-col text-left leading-none">
-              <span className="font-extrabold tracking-tight text-base sm:text-lg text-slate-900">
-                klar <span className="text-[#3d9970]">solution</span>
-              </span>
-              <span className="text-[9px] uppercase tracking-widest text-slate-400 font-semibold mt-0.5">
-                Smart Grid AG
-              </span>
-            </div>
-          </a>
+      {/* Floating Sticky Navigation Header with Reflective Logo */}
+      <div className="sticky top-2 z-50 max-w-6xl mx-auto px-4 sm:px-6 transition-all">
+        <header className="bg-black border border-neutral-900 shadow-2xl rounded-2xl px-4 sm:px-6 h-24 flex items-center justify-between gap-3 sm:gap-6">
+          {/* Brand Logo with Reflection */}
+          <div className="shrink-0">
+            <Logo variant="full" size="md" to="/" />
+          </div>
 
-          {/* Core Navigation Links (4 core links) */}
+          {/* Core Navigation Links */}
           {currentView === 'landing' && (
-            <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-xs sm:text-sm font-semibold text-slate-600">
+            <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-xs sm:text-sm font-semibold text-neutral-300">
               <a href="#problem" className="hover:text-[#3d9970] transition-colors py-1">
                 Lösung
               </a>

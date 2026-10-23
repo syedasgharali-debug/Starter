@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
+import { Logo } from '../Logo';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -70,32 +71,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
 
   return (
     <aside
-      className={`bg-white border-r border-slate-200 h-screen flex flex-col justify-between transition-all duration-300 ease-in-out relative z-30 shadow-sm flex-shrink-0 ${
+      className={`bg-black border-r border-neutral-900 h-screen flex flex-col justify-between transition-all duration-300 ease-in-out relative z-30 shadow-2xl flex-shrink-0 ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
       {/* Top Logo & Header */}
       <div>
-        <div className="h-16 px-4 border-b border-slate-100 flex items-center justify-between">
-          <NavLink to="/" className="flex items-center gap-3 overflow-hidden group">
-            <div className="w-10 h-10 rounded-xl bg-[#08271e] text-white flex items-center justify-center font-serif font-extrabold text-lg shadow-sm border border-[#3d9970]/30 group-hover:scale-105 transition-transform flex-shrink-0">
-              k<span className="text-[#3d9970]">s</span>
-            </div>
-            {!isCollapsed && (
-              <div className="flex flex-col text-left leading-tight overflow-hidden whitespace-nowrap">
-                <span className="font-serif font-extrabold tracking-tight text-base text-[#142032]">
-                  klar <span className="text-[#3d9970]">solution</span>
-                </span>
-                <span className="text-[9px] uppercase tracking-widest text-slate-500 font-semibold">
-                  Smart Grid AG
-                </span>
-              </div>
-            )}
-          </NavLink>
+        <div className="h-28 bg-black border-b border-neutral-900 px-3 flex items-center justify-center overflow-hidden">
+          <Logo
+            variant={isCollapsed ? 'icon' : 'full'}
+            size={isCollapsed ? 'sm' : 'md'}
+            to="/"
+          />
         </div>
 
         {/* Navigation Items */}
-        <nav className="p-3 space-y-1 mt-2">
+        <nav className="p-3 space-y-1.5 mt-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isPathActive(item.path, item.exact);
@@ -107,13 +98,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
                 title={isCollapsed ? item.label : undefined}
                 className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-all relative group ${
                   active
-                    ? 'bg-[#08271e] text-white shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-emerald-950/80 text-white border border-emerald-800/60 shadow-sm'
+                    : 'text-neutral-400 hover:bg-neutral-900 hover:text-white'
                 }`}
               >
                 <Icon
                   className={`w-5 h-5 flex-shrink-0 transition-colors ${
-                    active ? 'text-[#86c8aa]' : 'text-slate-500 group-hover:text-slate-700'
+                    active ? 'text-emerald-400' : 'text-neutral-500 group-hover:text-neutral-300'
                   }`}
                 />
 
@@ -122,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
                 )}
 
                 {!isCollapsed && item.badge && (
-                  <span className="px-1.5 py-0.5 text-[9px] font-extrabold rounded-md bg-[#3d9970]/20 text-[#2f815f] border border-[#3d9970]/30 flex items-center gap-0.5">
+                  <span className="px-1.5 py-0.5 text-[9px] font-extrabold rounded-md bg-emerald-950 text-emerald-400 border border-emerald-800/80 flex items-center gap-0.5">
                     <Sparkles className="w-2.5 h-2.5" />
                     {item.badge}
                   </span>
@@ -130,7 +121,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
 
                 {/* Tooltip on Collapsed */}
                 {isCollapsed && (
-                  <div className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                  <div className="absolute left-full ml-3 px-3 py-1.5 bg-neutral-900 border border-neutral-800 text-white text-xs font-bold rounded-lg shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
                     {item.label}
                   </div>
                 )}
@@ -141,19 +132,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
       </div>
 
       {/* Footer Collapse Toggle */}
-      <div className="p-3 border-t border-slate-100">
+      <div className="p-3 border-t border-neutral-900 bg-black">
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold text-xs transition-colors border border-slate-200"
+          className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-neutral-950 hover:bg-neutral-900 text-neutral-400 hover:text-white font-bold text-xs transition-colors border border-neutral-800"
           title={isCollapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'}
         >
           {isCollapsed ? (
-            <ChevronRight className="w-4 h-4 text-slate-600" />
+            <ChevronRight className="w-4 h-4 text-neutral-400" />
           ) : (
             <>
-              <ChevronLeft className="w-4 h-4 text-slate-600" />
-              <span className="text-slate-700">Navigation einklappen</span>
+              <ChevronLeft className="w-4 h-4 text-neutral-400" />
+              <span className="text-neutral-300">Navigation einklappen</span>
             </>
           )}
         </button>

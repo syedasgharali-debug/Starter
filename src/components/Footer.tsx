@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Language } from '../types';
 import { ShieldCheck, ArrowRight, CheckCircle2, FileText, Lock, Globe } from 'lucide-react';
+import { Logo } from './Logo';
 
 interface FooterProps {
   currentLang?: Language;
@@ -24,27 +25,17 @@ export const Footer: React.FC<FooterProps> = ({ onRequestQuote }) => {
   };
 
   return (
-    <footer className="bg-[#0a1512] text-slate-300 border-t border-slate-800 text-sm relative">
+    <footer className="bg-black text-slate-300 border-t border-neutral-900 text-sm relative">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12 pb-12 border-b border-slate-800/80">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12 pb-12 border-b border-neutral-900">
           {/* Column 1: Brand & Mission */}
           <div className="lg:col-span-4 space-y-5">
-            <a
-              href="#top"
-              className="inline-flex flex-col items-start justify-center group"
-            >
-              <div className="flex items-center gap-2">
-                <span className="font-serif font-extrabold tracking-tight text-2xl text-white group-hover:text-emerald-400 transition-colors">
-                  klar <span className="text-[#3d9970]">solution</span>
-                </span>
-                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/50">
-                  Enterprise
-                </span>
-              </div>
-              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mt-0.5">
+            <div className="space-y-2">
+              <Logo variant="full" size="md" to="/" />
+              <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium pt-1">
                 Smart Grid AG • Schweiz
-              </span>
-            </a>
+              </div>
+            </div>
 
             <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
               Intelligente Rechnungsprüfung und Reklamationsabwicklung für Schweizer Finanzteams. Automatischer 3-Wege-Abgleich zur Vermeidung von Überzahlungen.

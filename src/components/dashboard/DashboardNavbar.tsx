@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 import { OperationalRole } from '../../types';
 import {
   Building,
@@ -11,6 +12,7 @@ import {
   ChevronDown,
   CheckCircle2,
   RefreshCw,
+  Sparkles,
 } from 'lucide-react';
 
 interface DashboardNavbarProps {
@@ -25,11 +27,15 @@ interface DashboardNavbarProps {
 const routeNames: Record<string, string> = {
   '/dashboard': 'Übersicht',
   '/dashboard/invoices': 'Rechnungs-Center',
-  '/dashboard/scanner': 'KI-Belegscanner',
+  '/dashboard/scanner': 'KI-Belegscanner 3.0',
   '/dashboard/disputes': 'Reklamations-Hub',
   '/dashboard/suppliers': 'Lieferanten-Risiko',
+  '/dashboard/billing': 'Billing & Pakete',
   '/dashboard/settings': 'Billing & Pakete',
-  '/dashboard/admin': 'Integrationen & Admin',
+  '/dashboard/users': 'Benutzer & RBAC-Rollen',
+  '/dashboard/sso-api': 'SSO, APIs & CLI-Setup',
+  '/dashboard/audit': 'ERP, Mandanten & Audit-Log',
+  '/dashboard/admin': 'Admin & Integrationen',
 };
 
 const roleBadges: Record<OperationalRole, string> = {
@@ -41,61 +47,78 @@ const roleBadges: Record<OperationalRole, string> = {
 };
 
 export const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
-  activeRole,
-  onRoleChange,
   userName,
   userEmail,
   userAvatarUrl,
   onSignOut,
 }) => {
   const location = useLocation();
+  const { userSession, effectiveRole, setSimulatedRole, setActiveTenant, login } = useApp();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const currentRouteName = routeNames[location.pathname] || 'Dashboard';
 
+  const handleRoleSelectChange = (newRole: OperationalRole) => {
+    if (userSession.role === 'Administrator') {
+      if (newRole === 'Controller') {
+        setSimulatedRole('Controller');
+      } else {
+        setSimulatedRole(null);
+      }
+    } else {
+      if (newRole === 'Administrator') {
+        login('Ali Kazmi', 'ali.kazmi@smartgrid.ch', 'Administrator');
+      }
+    }
+  };
+
   return (
     <header className="h-16 bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/60 border-b border-emerald-100 px-4 sm:px-6 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-2xs">
-      {/* Left Breadcrumbs */}
-      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-        <span className="text-slate-400">Kundenbereich</span>
-        <span className="text-slate-300">/</span>
-        <span className="text-[#08271e] font-extrabold text-sm">{currentRouteName}</span>
-      </div>
+      {/* Left Breadcrumbs & Live Production Badge */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+          <span className="text-slate-400">Kundenbereich</span>
+          <span className="text-slate-300">/</span>
+          <span className="text-[#08271e] font-extrabold text-sm">{currentRouteName}</span>
+        </div>
 
-      {/* Right Controls Bar */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        {/* Real-time Sync Status Badge */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold shadow-2xs">
+        {/* Official Live Production Status Badge */}
+        <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/80 text-[10px] font-black uppercase tracking-wider shadow-xs">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span>Abacus / SAP Sync aktiv</span>
+          <span>LIVE PRODUCTION • ISO 27001 • DSGVO/DSG</span>
         </div>
+      </div>
 
+      {/* Right Controls Bar */}
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Tenant Organization Switcher */}
-        <div className="hidden sm:flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800">
+        <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-800">
           <Building className="w-3.5 h-3.5 text-[#3d9970]" />
-          <span>Smart Grid AG</span>
-          <span className="text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded font-mono font-extrabold">
-            Enterprise
-          </span>
+          <select
+            value={userSession.activeTenant}
+            onChange={(e) => setActiveTenant(e.target.value)}
+            className="bg-transparent text-slate-900 font-extrabold text-xs focus:outline-none cursor-pointer pr-1"
+          >
+            <option value="Smart Grid AG">Smart Grid AG</option>
+            <option value="The DigiXy">The DigiXy</option>
+            <option value="AlpenBau Holding AG">AlpenBau Holding AG</option>
+          </select>
         </div>
 
-        {/* 5-Role Switcher Dropdown */}
+        {/* Role Selector / Status */}
         <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-200 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-800">
           <UserCheck className="w-3.5 h-3.5 text-[#3d9970]" />
           <select
-            value={activeRole}
-            onChange={(e) => onRoleChange(e.target.value as OperationalRole)}
+            value={effectiveRole}
+            onChange={(e) => handleRoleSelectChange(e.target.value as OperationalRole)}
             className="bg-transparent text-slate-900 font-extrabold text-xs focus:outline-none cursor-pointer pr-1"
           >
             <option value="Administrator">Administrator (Vollzugriff)</option>
-            <option value="Controller">Controller (Finanzübersicht)</option>
-            <option value="Buchhalter">Buchhalter (Erfassung)</option>
-            <option value="Freigeber">Freigeber (Zahlung)</option>
-            <option value="Auditor">Auditor (Revision)</option>
+            <option value="Controller">Controller (Finanzkontrolle)</option>
           </select>
         </div>
 
@@ -112,30 +135,30 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-4 space-y-3">
+            <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-4 space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                <span className="text-xs font-extrabold text-slate-900">Benachrichtigungen</span>
+                <span className="text-xs font-extrabold text-slate-900">Live Audit-Meldungen</span>
                 <span className="text-[10px] font-bold text-[#3d9970] bg-[#eef8f3] px-2 py-0.5 rounded-full">
-                  2 neu
+                  ISO 27001 Aktiv
                 </span>
               </div>
               <div className="space-y-2 text-xs">
                 <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
                   <div className="font-bold text-slate-900 flex items-center justify-between">
-                    <span>Abweichung festgestellt</span>
-                    <span className="text-[10px] text-slate-400">vor 12 Min</span>
+                    <span>3-Way Matching Warnung</span>
+                    <span className="text-[10px] text-slate-400">vor 2 Min</span>
                   </div>
                   <p className="text-slate-600 text-[11px]">
-                    Rechnung RE-2026-8892 weist +CHF 450.00 Preisabweichung auf.
+                    PO-2026-992: Swiss Industrial Hydraulics AG flagged (+CHF 789.60).
                   </p>
                 </div>
                 <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
                   <div className="font-bold text-slate-900 flex items-center justify-between">
-                    <span>ERP-Sync abgeschlossen</span>
-                    <span className="text-[10px] text-slate-400">vor 1 Std</span>
+                    <span>ERP Sync Status</span>
+                    <span className="text-[10px] text-slate-400">vor 15 Min</span>
                   </div>
                   <p className="text-slate-600 text-[11px]">
-                    14 Belege erfolgreich nach Abacus exportiert.
+                    Konnektor Smart Grid AG (SAP S/4HANA) bereit.
                   </p>
                 </div>
               </div>
@@ -143,7 +166,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
           )}
         </div>
 
-        {/* User Profile & Actions Dropdown */}
+        {/* User Profile Dropdown */}
         <div className="relative">
           <button
             type="button"
@@ -163,19 +186,21 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
             )}
             <div className="hidden md:flex flex-col text-left leading-tight">
               <span className="font-extrabold text-xs text-slate-900">{userName}</span>
-              <span className="text-[10px] text-[#3d9970] font-bold">{activeRole}</span>
+              <span className="text-[10px] text-[#3d9970] font-bold">{effectiveRole}</span>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden md:block" />
           </button>
 
           {profileDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-60 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-3 space-y-2">
+            <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-3 space-y-2 animate-fadeIn">
               <div className="border-b border-slate-100 pb-2">
                 <strong className="block text-xs font-bold text-slate-900">{userName}</strong>
                 <span className="text-[11px] text-slate-500 font-mono block truncate">{userEmail}</span>
-                <span className="inline-block mt-1 px-2 py-0.5 rounded bg-[#eef8f3] text-[#2f815f] text-[10px] font-extrabold">
-                  {roleBadges[activeRole]}
-                </span>
+                <div className="mt-1 flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded bg-[#eef8f3] text-[#2f815f] text-[10px] font-extrabold">
+                    {roleBadges[effectiveRole]}
+                  </span>
+                </div>
               </div>
 
               <Link

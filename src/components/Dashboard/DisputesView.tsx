@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
-import { Language, InvoiceRecord } from '../../types';
+import { useApp } from '../../context/AppContext';
+import { Language } from '../../types';
 import { translations } from '../../translations/translations';
-import { AlertCircle, Copy, Check, Send, CheckCircle2, ArrowRight } from 'lucide-react';
+import { AlertCircle, Copy, Check, Send, CheckCircle2, ArrowRight, Download } from 'lucide-react';
 
 interface DisputesViewProps {
   currentLang: Language;
-  invoices: InvoiceRecord[];
 }
 
-export const DisputesView: React.FC<DisputesViewProps> = ({ currentLang, invoices }) => {
+export const DisputesView: React.FC<DisputesViewProps> = ({ currentLang }) => {
   const t = translations[currentLang];
+  const { invoices } = useApp();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const flaggedInvoices = invoices.filter(
-    (inv) => inv.status === 'discrepancy' || inv.status === 'duplicate'
+    (inv) => inv.varianceCHF > 0 || inv.status === 'discrepancy' || inv.status === 'duplicate'
   );
 
   const totalFlaggedVariance = flaggedInvoices.reduce((acc, curr) => acc + curr.varianceCHF, 0);
@@ -31,12 +32,12 @@ export const DisputesView: React.FC<DisputesViewProps> = ({ currentLang, invoice
         <div>
           <h1 className="text-2xl font-serif font-bold text-[#142032]">{t.dashTabDisputes}</h1>
           <p className="text-xs text-gray-500 mt-1">
-            Übersicht aller dokumentierten Reklamationen zur Rückforderung bei Lieferanten
+            Automatisch generierte Mängelrügen (OR Art. 82/107) zur Kostenrückforderung bei B2B-Lieferanten
           </p>
         </div>
 
         <div className="bg-[#fff3e6] border border-[#f5d0bc] px-4 py-2 rounded-2xl text-xs font-bold text-[#8a5a10]">
-          Offenes Rückforderungsvolumen: <span className="text-[#df6029] font-mono text-sm font-extrabold">CHF {totalFlaggedVariance.toLocaleString()}</span>
+          Offenes Rückforderungsvolumen: <span className="text-[#df6029] font-mono text-sm font-extrabold">CHF {totalFlaggedVariance.toLocaleString('de-CH', { minimumFractionDigits: 2 })}</span>
         </div>
       </div>
 
@@ -60,8 +61,8 @@ export const DisputesView: React.FC<DisputesViewProps> = ({ currentLang, invoice
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-sm font-mono font-extrabold text-[#df6029] bg-[#fff3e6] px-3 py-1 rounded-full">
-                  + CHF {inv.varianceCHF.toLocaleString()} Abweichung
+                <span className="text-sm font-mono font-extrabold text-[#df6029] bg-[#fff3e6] px-3 py-1 rounded-full border border-amber-200">
+                  + CHF {inv.varianceCHF.toLocaleString('de-CH', { minimumFractionDigits: 2 })} Abweichung
                 </span>
               </div>
             </div>
@@ -78,7 +79,7 @@ export const DisputesView: React.FC<DisputesViewProps> = ({ currentLang, invoice
             {inv.disputeLetter && (
               <div className="space-y-2 pt-1">
                 <div className="flex justify-between items-center text-xs font-bold text-gray-600">
-                  <span>Generierter Reklamationstext für Lieferant:</span>
+                  <span>Generierter Mängelrüge-Text (OR Art. 82/107):</span>
                   <button
                     type="button"
                     onClick={() => handleCopy(inv.id, inv.disputeLetter)}

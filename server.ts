@@ -116,7 +116,37 @@ Detect any discrepancies, calculate the potential overcharge/saving in CHF, dete
   }
 });
 
-// 2. Endpoint: Klara AI Chat Assistant
+// 2. Endpoint: Multimodal Gemini 2.5 Flash Invoice File Audit
+app.post('/api/analyze-invoice-file', async (req, res) => {
+  try {
+    const { fileBase64, mimeType, poContext } = req.body;
+    if (!fileBase64) {
+      return res.status(400).json({ success: false, error: 'fileBase64 is required' });
+    }
+
+    const { analyzeInvoiceWithGemini } = await import('./src/services/geminiInvoiceAudit.js');
+    const result = await analyzeInvoiceWithGemini(
+      fileBase64,
+      mimeType || 'image/png',
+      poContext || {
+        poNumber: 'PO-2026-992',
+        poAmountChf: 2636.70,
+        grnSummary: '10x Druckventil 200 bar (SKU: HYD-04)',
+        masterIban: 'CH93 0070 0110 0001 2345 6',
+      }
+    );
+
+    res.json({ success: true, result });
+  } catch (error: any) {
+    console.error('Invoice file analysis error:', error);
+    res.status(500).json({
+      success: false,
+      error: error?.message || 'Failed to analyze invoice file with Gemini 2.5 Flash',
+    });
+  }
+});
+
+// 3. Endpoint: Klara AI Chat Assistant
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, language = 'de', history = [] } = req.body;

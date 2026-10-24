@@ -1,23 +1,24 @@
 import React from 'react';
-import { Language, SupplierRecord } from '../../types';
+import { useApp } from '../../context/AppContext';
+import { Language } from '../../types';
 import { translations } from '../../translations/translations';
 import { Users, AlertTriangle, ShieldCheck, Award, FileText } from 'lucide-react';
 
 interface SuppliersViewProps {
   currentLang: Language;
-  suppliers: SupplierRecord[];
 }
 
-export const SuppliersView: React.FC<SuppliersViewProps> = ({ currentLang, suppliers }) => {
+export const SuppliersView: React.FC<SuppliersViewProps> = ({ currentLang }) => {
   const t = translations[currentLang];
+  const { suppliers } = useApp();
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn text-slate-900">
       {/* Header */}
       <div className="border-b border-gray-200 pb-5">
         <h1 className="text-2xl font-serif font-bold text-[#142032]">{t.dashTabSuppliers}</h1>
         <p className="text-xs text-gray-500 mt-1">
-          Risiko-Scorecards & Historische Fehlerquoten wichtiger B2B-Lieferanten
+          Risiko-Scorecards, Compliance & Historische Fehlerquoten wichtiger B2B-Lieferanten
         </p>
       </div>
 
@@ -60,7 +61,9 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({ currentLang, suppl
               </div>
               <div>
                 <span className="text-gray-400 block">Überzahlungen</span>
-                <strong className="font-mono text-[#df6029]">CHF {sup.totalOverchargeCHF.toLocaleString()}</strong>
+                <strong className="font-mono text-[#df6029]">
+                  CHF {sup.totalOverchargeCHF.toLocaleString('de-CH')}
+                </strong>
               </div>
               <div>
                 <span className="text-gray-400 block">Compliance</span>

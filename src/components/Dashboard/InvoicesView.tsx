@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useApp } from '../../context/AppContext';
 import { Language, InvoiceRecord } from '../../types';
 import { translations } from '../../translations/translations';
 import {
@@ -8,26 +9,25 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
-  Copy,
-  Check,
   Eye,
   X,
-  FileText,
   Download,
   ChevronDown,
   Layers,
-  Sparkles,
   HelpCircle,
+  PlusCircle,
+  Copy,
+  Check,
 } from 'lucide-react';
 
 interface InvoicesViewProps {
   currentLang: Language;
-  invoices: InvoiceRecord[];
 }
 
-export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoices: initialInvoicesProp }) => {
+export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang }) => {
   const t = translations[currentLang];
-  const [invoiceList, setInvoiceList] = useState<InvoiceRecord[]>(initialInvoicesProp);
+  const { invoices, addInvoice, updateInvoiceStatus } = useApp();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceRecord | null>(null);
@@ -35,11 +35,15 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    setInvoiceList(initialInvoicesProp);
-  }, [initialInvoicesProp]);
+  // New Invoice Modal state
+  const [newInvoiceModalOpen, setNewInvoiceModalOpen] = useState(false);
+  const [newInvNum, setNewInvNum] = useState(`INV-2026-${Math.floor(100 + Math.random() * 900)}`);
+  const [newSupplier, setNewSupplier] = useState('Swiss Industrial Hydraulics AG');
+  const [newPoNum, setNewPoNum] = useState('PO-2026-992');
+  const [newBilledCHF, setNewBilledCHF] = useState('4200.00');
+  const [newPoCHF, setNewPoCHF] = useState('3780.00');
 
-  const filteredInvoices = invoiceList.filter((inv) => {
+  const filteredInvoices = invoices.filter((inv) => {
     const matchesSearch =
       inv.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       inv.supplierName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,31 +67,67 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
-    }, 4000);
+    }, 3500);
   };
 
   const handleCopyLetter = (text: string) => {
     navigator.clipboard.writeText(text);
     setLetterCopied(true);
-    setTimeout(() => setLetterCopied(false), 3000);
+    setTimeout(() => setLetterCopied(false), 2500);
   };
 
-  const handleUpdateInvoiceStatus = (invId: string, newStatus: InvoiceRecord['status'], actionLabel: string) => {
-    setInvoiceList((prev) =>
-      prev.map((item) => (item.id === invId ? { ...item, status: newStatus } : item))
-    );
+  const handleUpdateStatus = (invId: string, newStatus: InvoiceRecord['status'], actionLabel: string) => {
+    updateInvoiceStatus(invId, newStatus);
     showToast(`Status für ${selectedInvoice?.invoiceNumber || invId}: ${actionLabel}`);
     setSelectedInvoice(null);
   };
 
-  // Helper to escape CSV cell value safely according to RFC 4180
+  const handleCreateNewInvoice = (e: React.FormEvent) => {
+    e.preventDefault();
+    const billed = parseFloat(newBilledCHF) || 0;
+    const po = parseFloat(newPoCHF) || 0;
+    const variance = Math.max(0, billed - po);
+
+    const newRecord: InvoiceRecord = {
+      id: `inv-${Date.now()}`,
+      invoiceNumber: newInvNum,
+      supplierName: newSupplier,
+      invoiceDate: new Date().toLocaleDateString('de-CH'),
+      poNumber: newPoNum,
+      totalBilledCHF: billed,
+      totalPOCHF: po,
+      varianceCHF: variance,
+      status: variance > 0 ? 'discrepancy' : 'approved',
+      discrepancyType: variance > 0 ? 'Price Variance' : 'Contract Terms',
+      riskLevel: variance > 500 ? 'High' : 'Low',
+      confidenceScore: 98,
+      lineItems: [
+        {
+          id: `li-${Date.now()}`,
+          description: `Materialposition ${newPoNum}`,
+          poUnitPrice: po,
+          billedUnitPrice: billed,
+          poQuantity: 1,
+          billedQuantity: 1,
+          varianceCHF: variance,
+          reason: variance > 0 ? `Abweichung (+CHF ${variance.toFixed(2)}) festgestellt` : '3-Wege-Match bestanden',
+        },
+      ],
+      disputeLetter: variance > 0 ? `Sehr geehrte Damen und Herren,\n\nwir beanstanden die Rechnung ${newInvNum} über CHF ${billed.toFixed(2)} bezüglich ${newPoNum}.\n\nKlarSolution Audit` : '',
+    };
+
+    addInvoice(newRecord);
+    setNewInvoiceModalOpen(false);
+    showToast(`Rechnung ${newInvNum} erfolgreich erfasst!`);
+  };
+
+  // CSV Helpers
   const escapeCsv = (val: string | number | undefined | null) => {
     if (val === undefined || val === null) return '""';
     const str = String(val).replace(/"/g, '""');
     return `"${str}"`;
   };
 
-  // 1. Export Overview of Filtered Invoices
   const handleExportFilteredSummaryCSV = () => {
     const headers = [
       'Invoice Number',
@@ -99,8 +139,6 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
       'Variance (CHF)',
       'Status',
       'Discrepancy Type',
-      'Risk Level',
-      'Confidence Score (%)',
     ];
 
     const rows = filteredInvoices.map((inv) => [
@@ -113,8 +151,6 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
       escapeCsv(inv.varianceCHF.toFixed(2)),
       escapeCsv(inv.status),
       escapeCsv(inv.discrepancyType),
-      escapeCsv(inv.riskLevel),
-      escapeCsv(`${inv.confidenceScore}%`),
     ]);
 
     const csvContent =
@@ -123,144 +159,17 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    const dateStr = new Date().toISOString().slice(0, 10);
     link.href = url;
-    link.download = `KlarSolution_Audit_Filtered_${statusFilter}_${dateStr}.csv`;
+    link.download = `KlarSolution_Rechnungen_${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
 
     setExportMenuOpen(false);
-    showToast(`${t.dashExportSuccess}: ${filteredInvoices.length} Rechnungen exportiert.`);
-  };
-
-  // 2. Export Detailed Discrepancies and Line-Items CSV
-  const handleExportDiscrepanciesLineItemsCSV = () => {
-    const headers = [
-      'Invoice Number',
-      'Supplier Name',
-      'Invoice Date',
-      'PO Number',
-      'Line Item Description',
-      'PO Unit Price (CHF)',
-      'Billed Unit Price (CHF)',
-      'PO Quantity',
-      'Billed Quantity',
-      'Line Variance (CHF)',
-      'Invoice Total Variance (CHF)',
-      'Discrepancy Type',
-      'Risk Level',
-      'Audit Finding Reason',
-    ];
-
-    const rows: string[] = [];
-
-    flaggedInvoices.forEach((inv) => {
-      if (inv.lineItems && inv.lineItems.length > 0) {
-        inv.lineItems.forEach((li) => {
-          rows.push(
-            [
-              escapeCsv(inv.invoiceNumber),
-              escapeCsv(inv.supplierName),
-              escapeCsv(inv.invoiceDate),
-              escapeCsv(inv.poNumber),
-              escapeCsv(li.description),
-              escapeCsv(li.poUnitPrice.toFixed(2)),
-              escapeCsv(li.billedUnitPrice.toFixed(2)),
-              escapeCsv(li.poQuantity),
-              escapeCsv(li.billedQuantity),
-              escapeCsv(li.varianceCHF.toFixed(2)),
-              escapeCsv(inv.varianceCHF.toFixed(2)),
-              escapeCsv(inv.discrepancyType),
-              escapeCsv(inv.riskLevel),
-              escapeCsv(li.reason),
-            ].join(',')
-          );
-        });
-      } else {
-        // Fallback row if no sub-items
-        rows.push(
-          [
-            escapeCsv(inv.invoiceNumber),
-            escapeCsv(inv.supplierName),
-            escapeCsv(inv.invoiceDate),
-            escapeCsv(inv.poNumber),
-            escapeCsv('General Invoice Discrepancy'),
-            escapeCsv(inv.totalPOCHF.toFixed(2)),
-            escapeCsv(inv.totalBilledCHF.toFixed(2)),
-            escapeCsv(1),
-            escapeCsv(1),
-            escapeCsv(inv.varianceCHF.toFixed(2)),
-            escapeCsv(inv.varianceCHF.toFixed(2)),
-            escapeCsv(inv.discrepancyType),
-            escapeCsv(inv.riskLevel),
-            escapeCsv(inv.discrepancyType),
-          ].join(',')
-        );
-      }
-    });
-
-    const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(','), ...rows].join('\r\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const dateStr = new Date().toISOString().slice(0, 10);
-    link.href = url;
-    link.download = `KlarSolution_Flagged_Discrepancies_${dateStr}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-
-    setExportMenuOpen(false);
-    showToast(`${t.dashExportSuccess}: ${rows.length} Positionen / ${flaggedInvoices.length} Abweichungen exportiert.`);
-  };
-
-  // 3. Export Single Selected Invoice Detail
-  const handleExportSingleInvoiceCSV = (inv: InvoiceRecord) => {
-    const headers = [
-      'Invoice Number',
-      'Supplier Name',
-      'Invoice Date',
-      'PO Number',
-      'Item Description',
-      'PO Unit Price (CHF)',
-      'Billed Unit Price (CHF)',
-      'PO Quantity',
-      'Billed Quantity',
-      'Variance (CHF)',
-      'Reason',
-    ];
-
-    const rows = inv.lineItems.map((li) =>
-      [
-        escapeCsv(inv.invoiceNumber),
-        escapeCsv(inv.supplierName),
-        escapeCsv(inv.invoiceDate),
-        escapeCsv(inv.poNumber),
-        escapeCsv(li.description),
-        escapeCsv(li.poUnitPrice.toFixed(2)),
-        escapeCsv(li.billedUnitPrice.toFixed(2)),
-        escapeCsv(li.poQuantity),
-        escapeCsv(li.billedQuantity),
-        escapeCsv(li.varianceCHF.toFixed(2)),
-        escapeCsv(li.reason),
-      ].join(',')
-    );
-
-    const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(','), ...rows].join('\r\n');
-
-    const blob = new Blob([csvContent], { type: 'type/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `KlarSolution_${inv.invoiceNumber}_Audit.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-
-    showToast(`${t.dashExportSuccess}: ${inv.invoiceNumber}`);
+    showToast(`CSV-Export erfolgreich (${filteredInvoices.length} Rechnungen)`);
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn relative">
+    <div className="space-y-6 animate-fadeIn relative text-slate-900">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 bg-[#08271e] text-white px-5 py-3 rounded-2xl shadow-2xl border border-[#3d9970] flex items-center gap-3 animate-fadeIn">
@@ -269,64 +178,50 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
         </div>
       )}
 
-      {/* View Header with Multi-Option Export Dropdown */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-gray-200 pb-5">
         <div>
           <h1 className="text-2xl font-serif font-bold text-[#142032]">{t.dashTabInvoices}</h1>
           <p className="text-xs text-gray-500 mt-1">
-            Alle erfassten Lieferantenrechnungen und Belegabgleiche im Detail
+            Alle erfassten Eingangsrechnungen & 3-Wege-Matchings im Detail
           </p>
         </div>
 
-        {/* Enhanced Export Menu Button */}
-        <div className="relative">
+        <div className="flex items-center gap-3">
+          {/* New Invoice Modal CTA */}
           <button
             type="button"
-            onClick={() => setExportMenuOpen(!exportMenuOpen)}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#245f49] to-[#3d9970] text-white text-xs font-bold shadow-md hover:from-[#1a4a38] hover:to-[#2f8a68] transition-all flex items-center gap-2"
+            onClick={() => setNewInvoiceModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-black hover:bg-neutral-900 text-white text-xs font-extrabold shadow-md transition-all flex items-center gap-2"
           >
-            <Download className="w-4 h-4 text-white" />
-            <span>CSV Export ({filteredInvoices.length})</span>
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`} />
+            <PlusCircle className="w-4 h-4 text-emerald-400" />
+            <span>+ Neue Eingangsrechnung erfassen</span>
           </button>
 
-          {exportMenuOpen && (
-            <div className="absolute right-0 ltr:right-0 rtl:left-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 py-2 z-30 animate-fadeIn">
-              <div className="px-4 py-2 border-b border-gray-100 text-[11px] font-extrabold uppercase tracking-wider text-gray-400">
-                {t.dashExportOptions}
+          {/* Export Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setExportMenuOpen(!exportMenuOpen)}
+              className="px-4 py-2.5 rounded-xl bg-[#3d9970] hover:bg-[#2f8a68] text-white text-xs font-extrabold shadow-md transition-all flex items-center gap-2"
+            >
+              <Download className="w-4 h-4 text-white" />
+              <span>CSV Export ({filteredInvoices.length})</span>
+            </button>
+
+            {exportMenuOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-200 py-2 z-30 animate-fadeIn">
+                <button
+                  type="button"
+                  onClick={handleExportFilteredSummaryCSV}
+                  className="w-full text-left px-4 py-2.5 hover:bg-[#eef8f3] text-xs font-bold text-gray-700 flex items-center gap-2"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-[#3d9970]" />
+                  <span>Gefilterte Rechnungen exportieren</span>
+                </button>
               </div>
-
-              {/* Option 1: Filtered Summary */}
-              <button
-                type="button"
-                onClick={handleExportFilteredSummaryCSV}
-                className="w-full text-left ltr:text-left rtl:text-right px-4 py-3 hover:bg-[#eef8f3] text-xs font-semibold text-gray-700 flex items-start gap-2.5 transition-colors"
-              >
-                <FileSpreadsheet className="w-4 h-4 text-[#3d9970] flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block text-[#142032]">{t.dashExportFilteredCsv}</strong>
-                  <span className="text-[11px] text-gray-500">
-                    {filteredInvoices.length} Rechnungen mit Status, PO-Vergleich & Salden
-                  </span>
-                </div>
-              </button>
-
-              {/* Option 2: Flagged Discrepancies Detailed */}
-              <button
-                type="button"
-                onClick={handleExportDiscrepanciesLineItemsCSV}
-                className="w-full text-left ltr:text-left rtl:text-right px-4 py-3 hover:bg-[#fff3e6] text-xs font-semibold text-gray-700 flex items-start gap-2.5 transition-colors border-t border-gray-50"
-              >
-                <AlertTriangle className="w-4 h-4 text-[#df6029] flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block text-[#142032]">{t.dashExportDiscrepanciesCsv}</strong>
-                  <span className="text-[11px] text-gray-500">
-                    {flaggedInvoices.length} fehlerhafte Belege mit zeilenweiser Fehlerbegründung
-                  </span>
-                </div>
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -343,61 +238,43 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto text-xs">
           <Filter className="w-4 h-4 text-gray-400" />
           <button
             type="button"
             onClick={() => setStatusFilter('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-              statusFilter === 'all' ? 'bg-[#08271e] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            className={`px-3 py-1.5 rounded-xl font-bold transition-colors ${
+              statusFilter === 'all' ? 'bg-black text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {t.dashFilterAll}
+            Alle ({invoices.length})
           </button>
           <button
             type="button"
             onClick={() => setStatusFilter('discrepancy')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+            className={`px-3 py-1.5 rounded-xl font-bold transition-colors ${
               statusFilter === 'discrepancy' ? 'bg-[#df6029] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            Abweichung festgestellt ({flaggedInvoices.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatusFilter('processing')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-              statusFilter === 'processing' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            In Prüfung
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatusFilter('resolved')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-              statusFilter === 'resolved' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            Bereinigt
+            Abweichung ({flaggedInvoices.length})
           </button>
           <button
             type="button"
             onClick={() => setStatusFilter('approved')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+            className={`px-3 py-1.5 rounded-xl font-bold transition-colors ${
               statusFilter === 'approved' ? 'bg-[#3d9970] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {t.dashFilterApproved}
+            Freigegeben
           </button>
         </div>
       </div>
 
-      {/* Invoice Audit Table */}
+      {/* Invoice Table */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left ltr:text-left rtl:text-right text-xs">
-            <thead className="bg-[#f7f9f8] border-b border-gray-200 text-gray-400 font-bold uppercase tracking-wider">
+            <thead className="bg-slate-50 border-b border-gray-200 text-gray-400 font-bold uppercase tracking-wider">
               <tr>
                 <th className="p-4">Rechnung #</th>
                 <th className="p-4">Lieferant</th>
@@ -405,7 +282,7 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
                 <th className="p-4">Datum</th>
                 <th className="p-4">Billed Amount</th>
                 <th className="p-4">Abweichung</th>
-                <th className="p-4">Abweichungsart</th>
+                <th className="p-4">Art</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-center">Details</th>
               </tr>
@@ -437,11 +314,7 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
                       </span>
                     ) : inv.status === 'duplicate' ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fdf0ea] text-[#df6029] text-[11px] font-bold">
-                        <XCircle className="w-3 h-3" /> Zahlung gestoppt
-                      </span>
-                    ) : inv.status === 'in_review' || inv.status === 'processing' ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fff6ea] text-[#8a5a10] text-[11px] font-bold">
-                        <HelpCircle className="w-3 h-3" /> In Klärung
+                        <XCircle className="w-3 h-3" /> Gestoppt
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fff6ea] text-[#8a5a10] text-[11px] font-bold">
@@ -469,41 +342,127 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
         </div>
       </div>
 
-      {/* Invoice Line-Item Detail Drawer / Modal */}
+      {/* New Invoice Modal */}
+      {newInvoiceModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-4 animate-scaleUp text-slate-900">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <h3 className="font-extrabold text-base text-[#142032] flex items-center gap-2">
+                <PlusCircle className="w-5 h-5 text-[#3d9970]" />
+                <span>+ Neue Eingangsrechnung erfassen</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setNewInvoiceModalOpen(false)}
+                className="p-1 text-gray-400 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateNewInvoice} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Rechnungsnummer</label>
+                <input
+                  type="text"
+                  required
+                  value={newInvNum}
+                  onChange={(e) => setNewInvNum(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 font-mono text-xs focus:ring-2 focus:ring-[#3d9970]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Lieferant Name</label>
+                <input
+                  type="text"
+                  required
+                  value={newSupplier}
+                  onChange={(e) => setNewSupplier(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-[#3d9970]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">PO Nummer (Bestellung)</label>
+                <input
+                  type="text"
+                  required
+                  value={newPoNum}
+                  onChange={(e) => setNewPoNum(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 font-mono text-xs focus:ring-2 focus:ring-[#3d9970]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">Rechnungsbetrag (CHF)</label>
+                  <input
+                    type="number"
+                    step="0.05"
+                    required
+                    value={newBilledCHF}
+                    onChange={(e) => setNewBilledCHF(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 font-mono text-xs focus:ring-2 focus:ring-[#3d9970]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">PO Genehmigt (CHF)</label>
+                  <input
+                    type="number"
+                    step="0.05"
+                    required
+                    value={newPoCHF}
+                    onChange={(e) => setNewPoCHF(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 font-mono text-xs focus:ring-2 focus:ring-[#3d9970]"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setNewInvoiceModalOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 font-bold hover:bg-gray-50"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl bg-[#3d9970] hover:bg-[#2f8a68] text-white font-extrabold shadow-md"
+                >
+                  Erfassen & Prüfen
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Invoice Detail Drawer */}
       {selectedInvoice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#08271e]/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-3xl w-full border border-gray-200 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto relative animate-scaleUp">
-            <div className="flex justify-between items-start border-b border-gray-100 pb-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full border border-gray-200 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto relative animate-scaleUp">
+            <div className="flex justify-between items-start border-b border-gray-100 pb-3">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-[#3d9970]">
                   Line-Item Audit Report
                 </span>
-                <h2 className="text-2xl font-serif font-bold text-[#142032] mt-0.5">
+                <h2 className="text-xl font-serif font-bold text-[#142032]">
                   {selectedInvoice.invoiceNumber} – {selectedInvoice.supplierName}
                 </h2>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleExportSingleInvoiceCSV(selectedInvoice)}
-                  className="px-3 py-1.5 rounded-xl border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold flex items-center gap-1.5"
-                  title="CSV Export für diesen Beleg"
-                >
-                  <Download className="w-3.5 h-3.5 text-[#3d9970]" />
-                  <span>CSV</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedInvoice(null)}
-                  className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedInvoice(null)}
+                className="p-1 text-gray-400 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            {/* General Metadata Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-[#f7f9f8] rounded-2xl text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 bg-slate-50 rounded-2xl text-xs">
               <div>
                 <span className="text-gray-400 block font-bold">PO Nummer</span>
                 <strong className="text-[#142032]">{selectedInvoice.poNumber}</strong>
@@ -522,131 +481,20 @@ export const InvoicesView: React.FC<InvoicesViewProps> = ({ currentLang, invoice
               </div>
             </div>
 
-            {/* 3-Way Reconciliation Cards Side-By-Side */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-sm text-[#142032] flex items-center gap-2">
-                <Layers className="w-4 h-4 text-[#3d9970]" />
-                <span>3-Wege-Abgleich (Rechnung vs. Bestellung vs. Lieferschein)</span>
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                {/* Card 1: Invoice */}
-                <div className="bg-[#f7f9f8] p-3.5 rounded-2xl border border-gray-200">
-                  <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">1. Eingangsrechnung</div>
-                  <div className="font-bold text-[#142032]">{selectedInvoice.invoiceNumber}</div>
-                  <div className="text-gray-500 font-mono mt-1">CHF {selectedInvoice.totalBilledCHF.toLocaleString()}</div>
-                  <div className="text-[11px] text-gray-500 mt-0.5">Datum: {selectedInvoice.invoiceDate}</div>
-                </div>
-
-                {/* Card 2: Purchase Order */}
-                <div className="bg-[#f7f9f8] p-3.5 rounded-2xl border border-gray-200">
-                  <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">2. ERP Bestellung (PO)</div>
-                  <div className="font-bold text-[#142032]">{selectedInvoice.poNumber}</div>
-                  <div className="text-gray-500 font-mono mt-1">CHF {selectedInvoice.totalPOCHF.toLocaleString()}</div>
-                  <div className="text-[11px] text-gray-500 mt-0.5">Soll-Satz: Rahmenvertrag</div>
-                </div>
-
-                {/* Card 3: Delivery Receipt */}
-                <div className="bg-[#f7f9f8] p-3.5 rounded-2xl border border-gray-200">
-                  <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">3. Lieferschein Wareneingang</div>
-                  <div className="font-bold text-[#142032]">LS-{selectedInvoice.poNumber.replace('PO-', '')}</div>
-                  <div className="text-emerald-700 font-semibold mt-1">✓ Eingang quittiert</div>
-                  <div className="text-[11px] text-gray-500 mt-0.5">Qualität: Bestanden</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Line Items Comparison */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-sm text-[#142032]">Zeilenweiser Belegabgleich</h3>
-              <div className="border border-gray-200 rounded-2xl overflow-hidden">
-                <table className="w-full text-left ltr:text-left rtl:text-right text-xs">
-                  <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-bold">
-                    <tr>
-                      <th className="p-3">Pos. Beschreibung</th>
-                      <th className="p-3">PO Preis</th>
-                      <th className="p-3">Rechnung Preis</th>
-                      <th className="p-3">PO Mng</th>
-                      <th className="p-3">Rechnung Mng</th>
-                      <th className="p-3">Abweichung</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 font-mono">
-                    {selectedInvoice.lineItems.map((li) => (
-                      <tr key={li.id}>
-                        <td className="p-3 font-sans font-medium text-[#142032]">{li.description}</td>
-                        <td className="p-3">CHF {li.poUnitPrice.toFixed(2)}</td>
-                        <td className="p-3">CHF {li.billedUnitPrice.toFixed(2)}</td>
-                        <td className="p-3">{li.poQuantity}</td>
-                        <td className="p-3">{li.billedQuantity}</td>
-                        <td className="p-3 font-bold text-[#df6029]">+ CHF {li.varianceCHF.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Dispute Letter Template preview */}
-            {selectedInvoice.disputeLetter && (
-              <div className="space-y-3 pt-2">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-sm text-[#142032]">Vorlage für Lieferanten-Reklamation (OR Art. 82/107)</h3>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyLetter(selectedInvoice.disputeLetter)}
-                    className="px-3 py-1.5 rounded-lg bg-[#3d9970] text-white text-xs font-bold hover:bg-[#2f8a68] transition-colors flex items-center gap-1.5"
-                  >
-                    {letterCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{letterCopied ? t.dashLetterCopied : t.dashCopyLetter}</span>
-                  </button>
-                </div>
-                <textarea
-                  readOnly
-                  rows={4}
-                  value={selectedInvoice.disputeLetter}
-                  className="w-full p-3.5 rounded-2xl border border-gray-300 text-xs font-mono bg-gray-50 text-gray-800"
-                />
-              </div>
-            )}
-
-            {/* Action Buttons Toolbar: Freigeben, Rückfrage, Zahlung stoppen */}
-            <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-end gap-3">
+            <div className="pt-2 flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() =>
-                  handleUpdateInvoiceStatus(selectedInvoice.id, 'duplicate', 'Zahlungsstopp aktiviert')
-                }
-                className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
+                onClick={() => handleUpdateStatus(selectedInvoice.id, 'duplicate', 'Zahlungsstopp aktiviert')}
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md"
               >
-                <XCircle className="w-4 h-4" />
-                <span>Zahlung stoppen</span>
+                Zahlung stoppen
               </button>
-
               <button
                 type="button"
-                onClick={() => {
-                  handleCopyLetter(
-                    selectedInvoice.disputeLetter ||
-                      `Sehr geehrte Damen und Herren,\n\nzur Rechnung ${selectedInvoice.invoiceNumber} bitten wir um Stornierung/Gutsagung der Abweichung von CHF ${selectedInvoice.varianceCHF}.\n\nKlarSolution Audit`
-                  );
-                  handleUpdateInvoiceStatus(selectedInvoice.id, 'in_review', 'In Lieferanten-Klärung übergeben');
-                }}
-                className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
+                onClick={() => handleUpdateStatus(selectedInvoice.id, 'approved', 'Rechnung freigegeben')}
+                className="px-4 py-2 rounded-xl bg-[#3d9970] hover:bg-[#2f8a68] text-white font-extrabold text-xs shadow-md"
               >
-                <AlertTriangle className="w-4 h-4" />
-                <span>Rückfrage an Lieferant</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  handleUpdateInvoiceStatus(selectedInvoice.id, 'approved', 'Rechnung freigegeben')
-                }
-                className="px-4 py-2.5 rounded-xl bg-[#3d9970] hover:bg-[#2f8a68] text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Freigeben</span>
+                Freigegeben
               </button>
             </div>
           </div>

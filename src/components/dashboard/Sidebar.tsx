@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 import {
   LayoutDashboard,
   FileSpreadsheet,
@@ -11,6 +12,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Lock,
+  KeyRound,
+  Database,
 } from 'lucide-react';
 import { Logo } from '../Logo';
 
@@ -21,8 +25,10 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse }) => {
   const location = useLocation();
+  const { effectiveRole } = useApp();
+  const isAdmin = effectiveRole === 'Administrator';
 
-  const navItems = [
+  const userNavItems = [
     {
       path: '/dashboard',
       label: 'Übersicht',
@@ -36,7 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
     },
     {
       path: '/dashboard/scanner',
-      label: 'KI-Belegscanner',
+      label: 'KI-Belegscanner 3.0',
       icon: ScanLine,
       badge: 'KI 3.0',
     },
@@ -51,14 +57,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
       icon: Users,
     },
     {
-      path: '/dashboard/settings',
+      path: '/dashboard/billing',
       label: 'Billing & Pakete',
       icon: CreditCard,
     },
+  ];
+
+  const adminNavItems = [
     {
-      path: '/dashboard/admin',
-      label: 'Integrationen & Admin',
+      path: '/dashboard/users',
+      label: 'Benutzer & RBAC-Rollen',
       icon: ShieldCheck,
+    },
+    {
+      path: '/dashboard/sso-api',
+      label: 'SSO, APIs & CLI-Setup',
+      icon: KeyRound,
+    },
+    {
+      path: '/dashboard/audit',
+      label: 'ERP, Mandanten & Audit-Log',
+      icon: Database,
     },
   ];
 
@@ -76,7 +95,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
       }`}
     >
       {/* Top Logo & Header */}
-      <div>
+      <div className="flex-1 overflow-y-auto">
         <div className="h-28 bg-black border-b border-neutral-900 px-3 flex items-center justify-center overflow-hidden">
           <Logo
             variant={isCollapsed ? 'icon' : 'full'}
@@ -85,9 +104,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
           />
         </div>
 
-        {/* Navigation Items */}
-        <nav className="p-3 space-y-1.5 mt-2">
-          {navItems.map((item) => {
+        {/* Group 1: Operatives User-Panel */}
+        <div className="p-3 space-y-1.5 mt-2">
+          {!isCollapsed && (
+            <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-neutral-500">
+              Operatives User-Panel
+            </div>
+          )}
+
+          {userNavItems.map((item) => {
             const Icon = item.icon;
             const active = isPathActive(item.path, item.exact);
 
@@ -96,14 +121,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
                 key={item.path}
                 to={item.path}
                 title={isCollapsed ? item.label : undefined}
-                className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold transition-all relative group ${
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all relative group ${
                   active
                     ? 'bg-emerald-950/80 text-white border border-emerald-800/60 shadow-sm'
                     : 'text-neutral-400 hover:bg-neutral-900 hover:text-white'
                 }`}
               >
                 <Icon
-                  className={`w-5 h-5 flex-shrink-0 transition-colors ${
+                  className={`w-4 h-4 flex-shrink-0 transition-colors ${
                     active ? 'text-emerald-400' : 'text-neutral-500 group-hover:text-neutral-300'
                   }`}
                 />
@@ -128,7 +153,69 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse 
               </NavLink>
             );
           })}
-        </nav>
+        </div>
+
+        {/* Group 2: Separates Admin-Panel */}
+        <div className="p-3 space-y-1.5 border-t border-neutral-900/80 mt-2">
+          {!isCollapsed && (
+            <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-neutral-500 flex items-center justify-between">
+              <span>Separates Admin-Panel</span>
+              {!isAdmin && (
+                <span className="text-[9px] text-amber-500 bg-amber-950/60 px-1.5 py-0.2 rounded font-extrabold border border-amber-800/40">
+                  Sperre
+                </span>
+              )}
+            </div>
+          )}
+
+          {adminNavItems.map((item) => {
+            const Icon = item.icon;
+            const active = isPathActive(item.path);
+
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                title={isCollapsed ? `${item.label} ${!isAdmin ? '(Gesperrt)' : ''}` : undefined}
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all relative group ${
+                  active
+                    ? 'bg-emerald-950/80 text-white border border-emerald-800/60 shadow-sm'
+                    : !isAdmin
+                    ? 'text-neutral-500 hover:bg-neutral-900/60 hover:text-neutral-300'
+                    : 'text-neutral-400 hover:bg-neutral-900 hover:text-white'
+                }`}
+              >
+                <Icon
+                  className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                    active
+                      ? 'text-emerald-400'
+                      : !isAdmin
+                      ? 'text-neutral-600'
+                      : 'text-neutral-500 group-hover:text-neutral-300'
+                  }`}
+                />
+
+                {!isCollapsed && (
+                  <span className={`truncate flex-1 text-left ${!isAdmin ? 'opacity-80' : ''}`}>
+                    {item.label}
+                  </span>
+                )}
+
+                {!isAdmin && (
+                  <Lock className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                )}
+
+                {/* Tooltip on Collapsed */}
+                {isCollapsed && (
+                  <div className="absolute left-full ml-3 px-3 py-1.5 bg-neutral-900 border border-neutral-800 text-white text-xs font-bold rounded-lg shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 flex items-center gap-2">
+                    <span>{item.label}</span>
+                    {!isAdmin && <Lock className="w-3 h-3 text-amber-500" />}
+                  </div>
+                )}
+              </NavLink>
+            );
+          })}
+        </div>
       </div>
 
       {/* Footer Collapse Toggle */}

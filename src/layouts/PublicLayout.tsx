@@ -15,6 +15,7 @@ interface PublicLayoutProps {
   userEmail: string;
   userRole: OperationalRole;
   userAvatarUrl?: string;
+  initialAuthModalOpen?: boolean;
   onSignOut: () => void;
   onLoginSuccess: (name: string, email: string, role: OperationalRole) => void;
 }
@@ -27,13 +28,14 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
   userEmail,
   userRole,
   userAvatarUrl,
+  initialAuthModalOpen = false,
   onSignOut,
   onLoginSuccess,
 }) => {
   const navigate = useNavigate();
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [quoteNotes, setQuoteNotes] = useState('');
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(initialAuthModalOpen);
 
   const handleOpenQuoteWithNotes = (notes: string = '') => {
     setQuoteNotes(notes);

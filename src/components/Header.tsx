@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Language, AppView, OperationalRole } from '../types';
 import { translations } from '../translations/translations';
-import { Phone, LayoutDashboard, Globe, Menu, X, LogIn, LogOut, Sparkles } from 'lucide-react';
+import { Phone, LayoutDashboard, Globe, Menu, X, LogIn, LogOut, Sparkles, Sun, Moon } from 'lucide-react';
 import { Logo } from './Logo';
+import { useApp } from '../context/AppContext';
 
 interface HeaderProps {
   currentLang: Language;
@@ -58,44 +59,63 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  const { themeMode, toggleTheme } = useApp();
+
   return (
     <>
-      {/* Floating Sticky Navigation Header with Reflective Logo */}
-      <div className="sticky top-2 z-50 max-w-6xl mx-auto px-4 sm:px-6 transition-all">
-        <header className="bg-black border border-neutral-900 shadow-2xl rounded-2xl px-4 sm:px-6 h-24 flex items-center justify-between gap-3 sm:gap-6">
-          {/* Brand Logo with Reflection */}
+      {/* Sticky Top Header Navigation */}
+      <div className="sticky top-0 z-30 w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs transition-all">
+        <header className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-3 sm:gap-6">
+          {/* Brand Logo */}
           <div className="shrink-0">
             <Logo variant="full" size="md" to="/" />
           </div>
 
           {/* Core Navigation Links */}
           {currentView === 'landing' && (
-            <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-xs sm:text-sm font-semibold text-neutral-300">
-              <a href="#problem" className="hover:text-[#3d9970] transition-colors py-1">
-                Lösung
-              </a>
+            <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200">
               <a href="#funktion" className="hover:text-[#3d9970] transition-colors py-1">
-                Funktionen
+                3-Wege-Prüfung
               </a>
               <a href="#roi" className="hover:text-[#3d9970] transition-colors py-1">
                 ROI-Rechner
               </a>
-              <a href="#vergleich" className="hover:text-[#3d9970] transition-colors py-1">
-                Warum Klar?
-              </a>
               <a href="#pakete" className="hover:text-[#3d9970] transition-colors py-1">
                 Pakete
+              </a>
+              <a href="#vergleich" className="hover:text-[#3d9970] transition-colors py-1">
+                API & CLI
               </a>
             </nav>
           )}
 
           {/* Right Header Actions */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* 1-Click Theme Toggle */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-extrabold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shadow-xs"
+              title="Design-Modus wechseln"
+            >
+              {themeMode === 'dark' ? (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">☀️ Helles Design</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-indigo-600" />
+                  <span className="hidden sm:inline">🌙 Dunkles Design</span>
+                </>
+              )}
+            </button>
+
             {/* Phone Micro Action Button */}
             <button
               type="button"
               onClick={() => setContactModalOpen(true)}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors"
               title="Kontakt & Telefon"
             >
               <Phone className="w-3.5 h-3.5 text-[#3d9970]" />
@@ -202,7 +222,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <LayoutDashboard className="w-3.5 h-3.5 text-emerald-400" />
               <span>
-                {currentView === 'landing' ? 'Live Demo' : 'Website'}
+                {currentView === 'landing' ? 'Kundenportal' : 'Zum Cockpit →'}
               </span>
             </button>
 
@@ -269,7 +289,7 @@ export const Header: React.FC<HeaderProps> = ({
                 className="py-3 rounded-2xl bg-[#3d9970] text-white font-extrabold text-center shadow-lg flex items-center justify-center gap-2"
               >
                 <LayoutDashboard className="w-4 h-4" />
-                <span>Live Demo & Kundenbereich →</span>
+                <span>Kundenportal & Cockpit →</span>
               </button>
             </div>
           </div>

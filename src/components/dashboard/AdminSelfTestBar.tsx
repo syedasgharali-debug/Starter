@@ -64,7 +64,7 @@ export const AdminSelfTestBar: React.FC = () => {
               : 'bg-[#3d9970] text-slate-950'
           }`}>
             <Shield className="w-3.5 h-3.5" />
-            <span>Admin RBAC Simulator</span>
+            <span>Admin Self-Test & RBAC-Tester</span>
           </div>
 
           <div className="hidden sm:flex items-center gap-2 text-slate-300">

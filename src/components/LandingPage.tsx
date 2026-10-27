@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Language } from '../types';
 import { translations } from '../translations/translations';
+import { CheckoutModal } from './CheckoutModal';
+import { PlanTier } from '../context/BillingContext';
 import {
   ShieldAlert,
   CheckCircle2,
@@ -36,6 +38,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onRequestQuoteWithNotes,
 }) => {
   const t = translations[currentLang];
+
+  const [checkoutModalPlan, setCheckoutModalPlan] = useState<PlanTier | null>(null);
 
   // Interactive 3-Way-Matching Simulation Card State
   const [activeSimTab, setActiveSimTab] = useState<'price' | 'duplicate' | 'vat'>('price');
@@ -145,10 +149,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5">
                 <button
                   type="button"
-                  onClick={() => onRequestQuoteWithNotes('Hero CTA: Live Demo anfragen')}
+                  onClick={() => setCheckoutModalPlan('PROTECT')}
                   className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-[#08271e] via-[#123d2e] to-[#245f49] hover:from-[#123d2e] hover:to-[#3d9970] text-white font-extrabold text-sm sm:text-base shadow-xl hover:scale-[1.02] transition-all border border-white/20 flex items-center justify-center gap-2"
                 >
-                  <span>Kundenbereich / Live Demo →</span>
+                  <span>Jetzt starten (Produktiv) →</span>
                 </button>
                 <a
                   href="#roi"
@@ -178,11 +182,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
                     <span className="font-extrabold text-xs text-slate-200 uppercase tracking-wider">
-                      Live 3-Way-Matching Simulation
+                      ● 3-WAY-MATCHING AUDIT-ENGINE | LIVE-BETRIEB ISO 27001
                     </span>
                   </div>
                   <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-800/60">
-                    KI-Analyse aktiv
+                    ISO 27001 Zertifiziert
                   </span>
                 </div>
 
@@ -683,10 +687,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => onRequestQuoteWithNotes('Paket: CHECK (CHF 49/Monat)')}
+                onClick={() => setCheckoutModalPlan('CHECK')}
                 className="w-full py-3 rounded-full border border-[#08271e] text-[#08271e] font-bold text-xs hover:bg-emerald-50 transition-colors"
               >
-                Paket wählen
+                Im Cockpit aktivieren
               </button>
             </div>
 
@@ -702,7 +706,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   CHF 99 <span className="text-xs font-normal text-slate-300">/ Monat</span>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed font-semibold">
-                  71 bis 120 Rechnungen / Monat
+                  Bis 120 Rechnungen / Monat
                 </p>
                 <ul className="space-y-2.5 text-xs text-slate-200 pt-4 border-t border-white/10">
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Alles aus Paket CHECK</li>
@@ -713,10 +717,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => onRequestQuoteWithNotes('Paket: PROTECT (CHF 99/Monat)')}
+                onClick={() => setCheckoutModalPlan('PROTECT')}
                 className="w-full py-3.5 rounded-full bg-[#3d9970] hover:bg-[#2f815f] text-white font-extrabold text-sm shadow-lg transition-all"
               >
-                Jetzt starten →
+                Paket buchen →
               </button>
             </div>
 
@@ -726,10 +730,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <span className="text-xs font-extrabold text-slate-400 uppercase tracking-widest block">Enterprise</span>
                 <h3 className="text-2xl font-bold text-slate-900">CONTROL</h3>
                 <div className="text-3xl font-extrabold text-[#08271e] font-mono">
-                  Auf Anfrage
+                  CHF 299 <span className="text-xs font-normal text-slate-500">/ Monat</span>
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed font-semibold">
-                  Große Belegvolumina & ERP-Integration
+                  Unbegrenzte Mandate & Belege
                 </p>
                 <ul className="space-y-2.5 text-xs text-slate-600 pt-4 border-t border-slate-100">
                   <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#3d9970]" /> Gesamter Prüf- und Freigabeprozess</li>
@@ -740,10 +744,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => onRequestQuoteWithNotes('Paket: CONTROL (Auf Anfrage)')}
+                onClick={() => setCheckoutModalPlan('CONTROL')}
                 className="w-full py-3 rounded-full border border-[#08271e] text-[#08271e] font-bold text-xs hover:bg-emerald-50 transition-colors"
               >
-                Angebot anfragen
+                Paket buchen →
               </button>
             </div>
           </div>
@@ -873,6 +877,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
       </section>
+
+      {/* Checkout Modal Flow */}
+      {checkoutModalPlan && (
+        <CheckoutModal
+          initialPlan={checkoutModalPlan}
+          onClose={() => setCheckoutModalPlan(null)}
+        />
+      )}
     </div>
   );
 };

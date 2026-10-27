@@ -69,6 +69,7 @@ export interface AppContextType {
   userSession: UserSession;
   simulatedRole: OperationalRole | null;
   effectiveRole: OperationalRole;
+  themeMode: 'light' | 'dark';
   invoices: InvoiceRecord[];
   suppliers: SupplierRecord[];
   auditLogs: SystemAuditLog[];
@@ -76,6 +77,7 @@ export interface AppContextType {
   queue: AuditorQueueItem[];
   
   // Actions
+  toggleTheme: () => void;
   login: (name: string, email: string, role: OperationalRole, tenant?: string) => void;
   logout: () => void;
   setSimulatedRole: (role: OperationalRole | null) => void;
@@ -98,6 +100,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const parsed = JSON.parse(stored);
         return {
           userSession: parsed.userSession || defaultUserSession,
+          themeMode: parsed.themeMode || 'light',
           invoices: parsed.invoices || initialInvoices,
           suppliers: parsed.suppliers || initialSuppliers,
           auditLogs: parsed.auditLogs || initialLogs,
@@ -110,6 +113,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
     return {
       userSession: defaultUserSession,
+      themeMode: 'light' as const,
       invoices: initialInvoices,
       suppliers: initialSuppliers,
       auditLogs: initialLogs,
@@ -121,6 +125,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const initialState = loadStoredState();
 
   const [userSession, setUserSession] = useState<UserSession>(initialState.userSession);
+  const [themeMode, setThemeMode] = useState<'light' | 'dark'>(initialState.themeMode);
   const [simulatedRole, setSimulatedRoleState] = useState<OperationalRole | null>(null);
   const [invoices, setInvoices] = useState<InvoiceRecord[]>(initialState.invoices);
   const [suppliers, setSuppliers] = useState<SupplierRecord[]>(initialState.suppliers);
@@ -132,11 +137,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const effectiveRole: OperationalRole =
     userSession.role === 'Administrator' && simulatedRole ? simulatedRole : userSession.role;
 
+  const toggleTheme = () => {
+    setThemeMode((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  // Sync theme mode to document element
+  useEffect(() => {
+    if (themeMode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [themeMode]);
+
   // Persist state to localStorage on changes
   useEffect(() => {
     try {
       const stateToStore = {
         userSession,
+        themeMode,
         invoices,
         suppliers,
         auditLogs,
@@ -147,7 +166,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (e) {
       console.error('Failed to save state to localStorage', e);
     }
-  }, [userSession, invoices, suppliers, auditLogs, clients, queue]);
+  }, [userSession, themeMode, invoices, suppliers, auditLogs, clients, queue]);
 
   const login = (name: string, email: string, role: OperationalRole, tenant?: string) => {
     const updatedUserSession: UserSession = {
@@ -341,11 +360,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         userSession,
         simulatedRole,
         effectiveRole,
+        themeMode,
         invoices,
         suppliers,
         auditLogs,
         clients,
         queue,
+        toggleTheme,
         login,
         logout,
         setSimulatedRole,

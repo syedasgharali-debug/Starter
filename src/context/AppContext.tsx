@@ -27,23 +27,23 @@ export interface UserSession {
 
 const defaultUserSession: UserSession = {
   isAuthenticated: true,
-  name: 'Ali Kazmi',
-  email: 'ali.kazmi@smartgrid.ch',
+  name: 'Administrator',
+  email: 'admin@klarsolution.com',
   role: 'Administrator',
   avatarUrl:
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  activeTenant: 'Smart Grid AG',
+  activeTenant: 'KlarSolution AG',
 };
 
 const initialLogs: SystemAuditLog[] = [
   {
     id: 'log-101',
     timestamp: '2026-10-24 14:45:12',
-    user: 'Ali Kazmi (ali.kazmi@smartgrid.ch)',
+    user: 'Administrator (admin@klarsolution.com)',
     action: 'Session Authenticated - Google Workspace SSO',
     category: 'Security',
     status: 'Success',
-    details: 'Role: Administrator · Mandat: Smart Grid AG · 2FA active',
+    details: 'Role: Administrator · Mandat: KlarSolution AG · 2FA active',
   },
   {
     id: 'log-102',
@@ -178,7 +178,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         role === 'Administrator'
           ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
           : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-      activeTenant: tenant || userSession.activeTenant || 'Smart Grid AG',
+      activeTenant: tenant || userSession.activeTenant || 'KlarSolution AG',
     };
     setUserSession(updatedUserSession);
     setSimulatedRoleState(null);
@@ -245,7 +245,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Auto-generate dispute letter if missing
     let disputeLetter = newInv.disputeLetter;
     if (isDiscrepancy && !disputeLetter) {
-      disputeLetter = `Kaufmännische Mängelrüge & Beanstandung nach OR Art. 82 / 107 & MWSTG Art. 26\nSmart Grid AG / KlarSolution Revisionsleitung\nIn der Au 44, 8706 Meilen, Schweiz\n\nAn: ${newInv.supplierName}\nRechnungsabteilung\n\nBetreff: Kaufmännische Mängelrüge zu Rechnung ${newInv.invoiceNumber} (Bestellung: ${newInv.poNumber})\n\nSehr geehrte Damen und Herren,\n\nbei der automatischen 3-Wege-Prüfung Ihrer Eingangsrechnung ${newInv.invoiceNumber} wurden folgende Unstimmigkeiten festgestellt:\n- In Rechnung gestellter Betrag: CHF ${newInv.totalBilledCHF.toFixed(2)}\n- Genehmigter Bestellwert (PO): CHF ${newInv.totalPOCHF.toFixed(2)}\n- Aufgedeckte Überbelastung: CHF ${newInv.varianceCHF.toFixed(2)}\n\nWir bitten Sie um Übermittlung einer korrigierten Gutschrift über CHF ${newInv.varianceCHF.toFixed(2)} innert 10 Tagen.\n\nFreundliche Grüsse,\nKlarSolution Revisionsabteilung · Smart Grid AG`;
+      disputeLetter = `Kaufmännische Mängelrüge & Beanstandung nach OR Art. 82 / 107 & MWSTG Art. 26\nKlarSolution AG / Revisionsleitung\nIn der Au 44, 8706 Meilen, Schweiz\n\nAn: ${newInv.supplierName}\nRechnungsabteilung\n\nBetreff: Kaufmännische Mängelrüge zu Rechnung ${newInv.invoiceNumber} (Bestellung: ${newInv.poNumber})\n\nSehr geehrte Damen und Herren,\n\nbei der automatischen 3-Wege-Prüfung Ihrer Eingangsrechnung ${newInv.invoiceNumber} wurden folgende Unstimmigkeiten festgestellt:\n- In Rechnung gestellter Betrag: CHF ${newInv.totalBilledCHF.toFixed(2)}\n- Genehmigter Bestellwert (PO): CHF ${newInv.totalPOCHF.toFixed(2)}\n- Aufgedeckte Überbelastung: CHF ${newInv.varianceCHF.toFixed(2)}\n\nWir bitten Sie um Übermittlung einer korrigierten Gutschrift über CHF ${newInv.varianceCHF.toFixed(2)} innert 10 Tagen.\n\nFreundliche Grüsse,\nKlarSolution Revisionsabteilung · KlarSolution AG`;
     }
 
     const processedInvoice: InvoiceRecord = {

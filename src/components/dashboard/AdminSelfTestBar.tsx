@@ -26,12 +26,12 @@ export const AdminSelfTestBar: React.FC = () => {
   };
 
   const handleImpersonateUser = (email: string) => {
-    if (email === 'buchhaltung@smartgrid.ch') {
-      login('Kreditoren Buchhaltung', 'buchhaltung@smartgrid.ch', 'Controller');
-      showToast('Eingeloggt als Controller: buchhaltung@smartgrid.ch');
+    if (email === 'buchhaltung@klarsolution.com') {
+      login('Kreditoren Buchhaltung', 'buchhaltung@klarsolution.com', 'Controller');
+      showToast('Eingeloggt als Controller: buchhaltung@klarsolution.com');
     } else {
-      login('Ali Kazmi', 'ali.kazmi@smartgrid.ch', 'Administrator');
-      showToast('Eingeloggt als Admin: ali.kazmi@smartgrid.ch');
+      login('Administrator', 'admin@klarsolution.com', 'Administrator');
+      showToast('Eingeloggt als Admin: admin@klarsolution.com');
     }
   };
 
@@ -116,8 +116,8 @@ export const AdminSelfTestBar: React.FC = () => {
             className="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-[11px] font-bold focus:outline-none focus:ring-1 focus:ring-[#3d9970]"
             title="Account wechseln"
           >
-            <option value="ali.kazmi@smartgrid.ch">ali.kazmi@smartgrid.ch (ADMIN)</option>
-            <option value="buchhaltung@smartgrid.ch">buchhaltung@smartgrid.ch (USER)</option>
+            <option value="admin@klarsolution.com">admin@klarsolution.com (ADMIN)</option>
+            <option value="buchhaltung@klarsolution.com">buchhaltung@klarsolution.com (USER)</option>
           </select>
 
           {/* Reset DB Button */}

@@ -33,7 +33,7 @@ export const Footer: React.FC<FooterProps> = ({ onRequestQuote }) => {
             <div className="space-y-2">
               <Logo variant="full" size="md" to="/" />
               <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium pt-1">
-                Smart Grid AG • Schweiz
+                KlarSolution AG • Schweiz
               </div>
             </div>
 
@@ -183,7 +183,7 @@ export const Footer: React.FC<FooterProps> = ({ onRequestQuote }) => {
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400 font-medium">
           <div>
-            © 2026 Klar Solution SMART GRID AG. Alle Rechte vorbehalten.
+            © 2026 KlarSolution AG. Alle Rechte vorbehalten.
           </div>
 
           <div className="flex flex-wrap items-center gap-4 sm:gap-6">
@@ -244,7 +244,7 @@ export const Footer: React.FC<FooterProps> = ({ onRequestQuote }) => {
                   Datenschutz & Schweizer Datenhaltung
                 </h3>
                 <p>
-                  KlarSolution (Smart Grid AG) verarbeitet Ihre Beleg- und Unternehmensdaten streng nach dem Schweizer Datenschutzgesetz (DSG) sowie der Europäischen Datenschutz-Grundverordnung (DSGVO).
+                  KlarSolution AG verarbeitet Ihre Beleg- und Unternehmensdaten streng nach dem Schweizer Datenschutzgesetz (DSG) sowie der Europäischen Datenschutz-Grundverordnung (DSGVO).
                 </p>
                 <h4 className="font-bold text-sm text-slate-900 pt-2">
                   1. Server-Standort Schweiz (Kanton Zürich)
@@ -268,11 +268,11 @@ export const Footer: React.FC<FooterProps> = ({ onRequestQuote }) => {
                   <span>Impressum & Rechtliche Angaben</span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-900">
-                  Klar Solution – Smart Grid AG
+                  KlarSolution AG
                 </h3>
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 font-mono space-y-1.5 text-slate-800">
                   <p>
-                    <strong>Betreiberin:</strong> Smart Grid AG
+                    <strong>Betreiberin:</strong> KlarSolution AG
                   </p>
                   <p>
                     <strong>Adresse:</strong> In der Au 44, 8706 Meilen, Schweiz
@@ -281,7 +281,7 @@ export const Footer: React.FC<FooterProps> = ({ onRequestQuote }) => {
                     <strong>Telefon:</strong> +41 44 589 72 88
                   </p>
                   <p>
-                    <strong>E-Mail:</strong> kontakt@klarsolution.ch
+                    <strong>E-Mail:</strong> info@klarsolution.com
                   </p>
                   <p>
                     <strong>Handelsregister:</strong> Kanton Zürich (CH-020.3.044.102-5)

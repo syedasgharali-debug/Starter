@@ -11,7 +11,7 @@ export const Forbidden403: React.FC<{ pageTitle?: string }> = ({ pageTitle = 'Se
     if (userSession.role === 'Administrator') {
       setSimulatedRole(null);
     } else {
-      login('Ali Kazmi', 'ali.kazmi@smartgrid.ch', 'Administrator');
+      login('Administrator', 'admin@klarsolution.com', 'Administrator');
     }
   };
 

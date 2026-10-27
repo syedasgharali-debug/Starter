@@ -37,12 +37,11 @@ function LandingPageWrapper({ currentLang }: { currentLang: Language }) {
   );
 }
 
-function OverviewViewWrapper({ currentLang }: { currentLang: Language }) {
+function OverviewViewWrapper() {
   const navigate = useNavigate();
 
   return (
     <OverviewView
-      currentLang={currentLang}
       onNavigateToView={(view) => navigate(`/dashboard/${view}`)}
     />
   );
@@ -64,7 +63,7 @@ function AppRoutes({ currentLang, setCurrentLang }: { currentLang: Language; set
       }
     } else {
       if (newRole === 'Administrator') {
-        login('Ali Kazmi', 'ali.kazmi@smartgrid.ch', 'Administrator');
+        login('Administrator', 'admin@klarsolution.com', 'Administrator');
       }
     }
   };
@@ -128,7 +127,7 @@ function AppRoutes({ currentLang, setCurrentLang }: { currentLang: Language; set
             />
           }
         >
-          <Route index element={<OverviewViewWrapper currentLang={currentLang} />} />
+          <Route index element={<OverviewViewWrapper />} />
           <Route path="invoices" element={<InvoicesView currentLang={currentLang} />} />
           <Route path="scanner" element={<ScannerView currentLang={currentLang} />} />
           <Route path="disputes" element={<DisputesView currentLang={currentLang} />} />

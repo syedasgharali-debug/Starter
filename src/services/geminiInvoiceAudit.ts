@@ -29,7 +29,7 @@ export async function analyzeInvoiceWithGemini(
     ],
     config: {
       systemInstruction:
-        "You are the KlarSolution 3.0 Forensic Invoice Audit Engine for Smart Grid AG. Extract invoice fields, compare against the PO and GRN, verify 8.1% Swiss MWST and IBAN plausibility, and return structured JSON.",
+        "You are the KlarSolution 3.0 Forensic Invoice Audit Engine for KlarSolution AG. Extract invoice fields, compare against the PO and GRN, verify 8.1% Swiss MWST and IBAN plausibility, and return structured JSON.",
       responseMimeType: "application/json",
       temperature: 0.1,
     },

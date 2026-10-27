@@ -153,12 +153,12 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* Login Button or User Profile Dropdown */}
+            {/* Login Button with LogIn Icon */}
             {!isAuthenticated ? (
               <button
                 type="button"
                 onClick={onOpenAuthModal}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs transition-all"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs transition-all border border-slate-200"
               >
                 <LogIn className="w-3.5 h-3.5 text-[#3d9970]" />
                 <span>Anmelden</span>
@@ -168,20 +168,10 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-slate-800 border border-emerald-200/80 transition-all shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-slate-800 font-extrabold text-xs border border-emerald-200/80 transition-all shadow-xs"
                 >
-                  {userAvatarUrl ? (
-                    <img
-                      src={userAvatarUrl}
-                      alt={userName}
-                      className="w-5 h-5 rounded-full object-cover border border-[#3d9970]"
-                    />
-                  ) : (
-                    <div className="w-5 h-5 rounded-full bg-[#3d9970] text-white flex items-center justify-center font-bold text-[10px]">
-                      {userName.charAt(0)}
-                    </div>
-                  )}
-                  <span className="text-xs font-extrabold text-slate-800 hidden sm:inline">{userName}</span>
+                  <LogIn className="w-3.5 h-3.5 text-[#3d9970]" />
+                  <span>Anmelden</span>
                 </button>
 
                 {profileDropdownOpen && (
@@ -314,7 +304,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 text-lg">Direkter Kontakt</h3>
-                <p className="text-xs text-slate-500">klar solution • Smart Grid AG</p>
+                <p className="text-xs text-slate-500">KlarSolution AG • Schweiz</p>
               </div>
             </div>
 
@@ -327,8 +317,8 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
               <div className="flex items-center justify-between text-slate-700">
                 <span>E-Mail Support:</span>
-                <a href="mailto:kontakt@klarsolution.ch" className="text-slate-900 font-bold">
-                  kontakt@klarsolution.ch
+                <a href="mailto:info@klarsolution.com" className="text-slate-900 font-bold">
+                  info@klarsolution.com
                 </a>
               </div>
               <div className="flex items-center justify-between text-slate-700">

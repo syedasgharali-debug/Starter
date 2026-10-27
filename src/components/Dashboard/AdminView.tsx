@@ -50,7 +50,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ currentLang }) => {
     role: UserRole;
   }>({
     name: 'Dr. Beat Oberholzer',
-    email: 'admin@klarsolution.ch',
+    email: 'info@klarsolution.com',
     role: 'Super Admin',
   });
 
@@ -62,7 +62,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ currentLang }) => {
 
   // Login Modal Form State
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
-  const [loginEmail, setLoginEmail] = useState('admin@klarsolution.ch');
+  const [loginEmail, setLoginEmail] = useState('info@klarsolution.com');
   const [loginPassword, setLoginPassword] = useState('••••••••••••');
   const [showPassword, setShowPassword] = useState(false);
   const [loginRole, setLoginRole] = useState<UserRole>('Super Admin');
@@ -73,7 +73,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ currentLang }) => {
     {
       id: 'usr-001',
       name: 'Dr. Beat Oberholzer',
-      email: 'admin@klarsolution.ch',
+      email: 'info@klarsolution.com',
       role: 'Super Admin',
       status: 'Active',
       lastLogin: '2026-10-19 14:45',
@@ -82,7 +82,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ currentLang }) => {
     {
       id: 'usr-002',
       name: 'Marcelle Dupont',
-      email: 'm.dupont@smartgrid.ch',
+      email: 'm.dupont@klarsolution.com',
       role: 'Lead Auditor',
       status: 'Active',
       lastLogin: '2026-10-19 11:20',
@@ -91,7 +91,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ currentLang }) => {
     {
       id: 'usr-003',
       name: 'Dr. Marco Rossi',
-      email: 'm.rossi@smartgrid.ch',
+      email: 'm.rossi@klarsolution.com',
       role: 'Finance Manager',
       status: 'Active',
       lastLogin: '2026-10-18 16:05',
@@ -100,7 +100,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ currentLang }) => {
     {
       id: 'usr-004',
       name: 'Stefan Huber',
-      email: 's.huber@smartgrid.ch',
+      email: 's.huber@klarsolution.com',
       role: 'ERP Specialist',
       status: 'Active',
       lastLogin: '2026-10-17 09:12',
@@ -933,7 +933,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ currentLang }) => {
                 <input
                   type="email"
                   required
-                  placeholder="t.keller@smartgrid.ch"
+                  placeholder="t.keller@klarsolution.com"
                   value={newUserEmail}
                   onChange={(e) => setNewUserEmail(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#3d9970]"

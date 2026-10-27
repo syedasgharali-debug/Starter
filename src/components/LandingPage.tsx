@@ -774,7 +774,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="flex items-center gap-3">
                   <Building2 className="w-5 h-5 text-[#3d9970]" />
                   <div>
-                    <span className="font-extrabold text-sm block text-slate-900">klar solution – Smart Grid AG</span>
+                    <span className="font-extrabold text-sm block text-slate-900">KlarSolution AG</span>
                     <span className="text-slate-500">In der Au 44, 8706 Meilen, Schweiz</span>
                   </div>
                 </div>
@@ -788,8 +788,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                 <div className="flex items-center gap-3">
                   <Mail className="w-4 h-4 text-[#3d9970]" />
-                  <a href="mailto:kontakt@klarsolution.ch" className="hover:text-[#3d9970] text-slate-800">
-                    kontakt@klarsolution.ch
+                  <a href="mailto:info@klarsolution.com" className="hover:text-[#3d9970] text-slate-800">
+                    info@klarsolution.com
                   </a>
                 </div>
               </div>

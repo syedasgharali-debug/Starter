@@ -32,10 +32,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const t = translations[currentLang];
   const { login } = useApp();
 
-  const [emailInput, setEmailInput] = useState('ali.kazmi@smartgrid.ch');
+  const [emailInput, setEmailInput] = useState('admin@klarsolution.com');
   const [passwordInput, setPasswordInput] = useState('••••••••••••');
   const [selectedRole, setSelectedRole] = useState<OperationalRole>('Administrator');
-  const [selectedTenant, setSelectedTenant] = useState('Smart Grid AG');
+  const [selectedTenant, setSelectedTenant] = useState('KlarSolution AG');
   const [loading, setLoading] = useState(false);
   const [statusText, setStatusText] = useState('');
 
@@ -65,7 +65,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanEmail = emailInput.trim() || 'ali.kazmi@smartgrid.ch';
+    const cleanEmail = emailInput.trim() || 'admin@klarsolution.com';
     const rawName = cleanEmail.split('@')[0].replace('.', ' ');
     const formattedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
     
@@ -134,17 +134,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="button"
                   onClick={() =>
                     handleSSOLogin(
-                      'Ali Kazmi',
-                      'ali.kazmi@smartgrid.ch',
+                      'Administrator',
+                      'admin@klarsolution.com',
                       'Administrator',
                       'Google Workspace',
-                      'Smart Grid AG'
+                      'KlarSolution AG'
                     )
                   }
                   className="py-2.5 px-3 rounded-xl bg-emerald-950 hover:bg-black text-white text-xs font-extrabold border border-emerald-800 transition-colors text-center shadow-xs flex items-center justify-center gap-1.5"
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>ADMIN (Ali Kazmi)</span>
+                  <span>ADMIN (Administrator)</span>
                 </button>
 
                 <button
@@ -152,10 +152,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   onClick={() =>
                     handleSSOLogin(
                       'Kreditoren Buchhaltung',
-                      'buchhaltung@smartgrid.ch',
+                      'buchhaltung@klarsolution.com',
                       'Controller',
                       'SwissID 2FA',
-                      'Smart Grid AG'
+                      'KlarSolution AG'
                     )
                   }
                   className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold border border-slate-700 transition-colors text-center shadow-xs flex items-center justify-center gap-1.5"
@@ -178,8 +178,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="button"
                   onClick={() =>
                     handleSSOLogin(
-                      'Ali Kazmi',
-                      'ali.kazmi@smartgrid.ch',
+                      'Administrator',
+                      'admin@klarsolution.com',
                       selectedRole,
                       'Google Workspace'
                     )
@@ -212,8 +212,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="button"
                   onClick={() =>
                     handleSSOLogin(
-                      'Ali Kazmi',
-                      'ali.kazmi@smartgrid.ch',
+                      'Administrator',
+                      'admin@klarsolution.com',
                       selectedRole,
                       'Microsoft Entra ID'
                     )
@@ -234,8 +234,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="button"
                   onClick={() =>
                     handleSSOLogin(
-                      'Ali Kazmi',
-                      'ali.kazmi@smartgrid.ch',
+                      'Administrator',
+                      'admin@klarsolution.com',
                       selectedRole,
                       'SwissID 2FA'
                     )
@@ -251,8 +251,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="button"
                   onClick={() =>
                     handleSSOLogin(
-                      'Ali Kazmi',
-                      'ali.kazmi@smartgrid.ch',
+                      'Administrator',
+                      'admin@klarsolution.com',
                       selectedRole,
                       'SAML 2.0 IdP'
                     )
@@ -285,7 +285,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       onChange={(e) => setSelectedTenant(e.target.value)}
                       className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#3d9970] bg-white"
                     >
-                      <option value="Smart Grid AG">Smart Grid AG</option>
+                      <option value="KlarSolution AG">KlarSolution AG</option>
                       <option value="The DigiXy">The DigiXy</option>
                       <option value="AlpenBau Holding AG">AlpenBau Holding AG</option>
                     </select>
@@ -314,7 +314,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     required
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
-                    placeholder="ali.kazmi@smartgrid.ch"
+                    placeholder="admin@klarsolution.com"
                     className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#3d9970]"
                   />
                 </div>

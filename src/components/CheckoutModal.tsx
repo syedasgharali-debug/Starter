@@ -35,15 +35,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [paymentGateway, setPaymentGateway] = useState<'credit_card' | 'twint' | 'invoice'>('credit_card');
 
   // Form Fields
-  const [companyName, setCompanyName] = useState('Smart Grid AG');
+  const [companyName, setCompanyName] = useState('KlarSolution AG');
   const [vatId, setVatId] = useState('CHE-442.994.102 MWST');
-  const [billingEmail, setBillingEmail] = useState('rechnungen@smartgrid.ch');
+  const [billingEmail, setBillingEmail] = useState('rechnungen@klarsolution.com');
   const [address, setAddress] = useState('In der Au 44');
   const [zipCity, setZipCity] = useState('8706 Meilen, Zürich');
   const [country, setCountry] = useState('Schweiz');
 
   // Credit Card Fields
-  const [cardName, setCardName] = useState('Ali Kazmi');
+  const [cardName, setCardName] = useState('KlarSolution Admin');
   const [cardNumber, setCardNumber] = useState('4242 4242 4242 4242');
   const [cardExpiry, setCardExpiry] = useState('08/28');
   const [cardCvc, setCardCvc] = useState('123');

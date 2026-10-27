@@ -26,7 +26,7 @@ export const initialInvoices: InvoiceRecord[] = [
         reason: 'Einzelpreis höher als im Rahmenvertrag vereinbart (+CHF 6.00/stk)',
       },
     ],
-    disputeLetter: `Sehr geehrte Damen und Herren,\n\nbei der automatischen Belegprüfung unserer Lieferantenrechnung INV-2026-904 haben wir eine Preisabweichung festgestellt.\nVereinbarter Einzelpreis gemäss PO-88204: CHF 118.00\nIn Rechnung gestellter Einzelpreis: CHF 124.00 (+CHF 600.00 Gesamtabweichung).\n\nWir bitten Sie um Übermittlung einer korrigierten Gutschrift über CHF 600.00.\n\nFreundliche Grüsse,\nKlarSolution – Smart Grid AG`,
+    disputeLetter: `Sehr geehrte Damen und Herren,\n\nbei der automatischen Belegprüfung unserer Lieferantenrechnung INV-2026-904 haben wir eine Preisabweichung festgestellt.\nVereinbarter Einzelpreis gemäss PO-88204: CHF 118.00\nIn Rechnung gestellter Einzelpreis: CHF 124.00 (+CHF 600.00 Gesamtabweichung).\n\nWir bitten Sie um Übermittlung einer korrigierten Gutschrift über CHF 600.00.\n\nFreundliche Grüsse,\nKlarSolution AG`,
   },
   {
     id: 'inv-002',
@@ -80,7 +80,7 @@ export const initialInvoices: InvoiceRecord[] = [
         reason: 'Prüfung erforderlich: Kein zugehöriger Bestellbeleg (PO) im ERP-System hinterlegt.',
       },
     ],
-    disputeLetter: `Sehr geehrte Damen und Herren,\n\nzur Rechnung INV-2026-851 liegt in unserem ERP-System keine passende Bestellung vor. Bitte senden Sie uns den unterzeichneten Lieferschein.\n\nFreundliche Grüsse,\nKlarSolution – Smart Grid AG`,
+    disputeLetter: `Sehr geehrte Damen und Herren,\n\nzur Rechnung INV-2026-851 liegt in unserem ERP-System keine passende Bestellung vor. Bitte senden Sie uns den unterzeichneten Lieferschein.\n\nFreundliche Grüsse,\nKlarSolution AG`,
   },
   {
     id: 'inv-004',
@@ -178,7 +178,7 @@ export const initialMultiTenantClients: MultiTenantClient[] = [
   },
   {
     id: 'cli-002',
-    companyName: 'Smart Grid AG',
+    companyName: 'KlarSolution AG',
     erpSystem: 'SAP S/4HANA',
     totalAuditedCHF: 3420000.0,
     totalSavingsCHF: 248900.0,
@@ -227,7 +227,7 @@ export const initialAuditorQueue: AuditorQueueItem[] = [
   },
   {
     id: 'q-002',
-    clientName: 'Smart Grid AG',
+    clientName: 'KlarSolution AG',
     invoiceNumber: 'INV-2026-904',
     supplierName: 'Swiss Industrial Hydraulics AG',
     billedCHF: 12400.0,

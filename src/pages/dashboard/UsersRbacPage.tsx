@@ -10,8 +10,8 @@ export const UsersRbacPage: React.FC<{ currentLang?: Language }> = () => {
   const [users, setUsers] = useState<UserAccount[]>([
     {
       id: 'usr-001',
-      name: 'Ali Kazmi',
-      email: 'ali.kazmi@smartgrid.ch',
+      name: 'KlarSolution Admin',
+      email: 'admin@klarsolution.com',
       role: 'Super Admin',
       status: 'Active',
       lastLogin: '2026-10-24 14:45',
@@ -20,7 +20,7 @@ export const UsersRbacPage: React.FC<{ currentLang?: Language }> = () => {
     {
       id: 'usr-002',
       name: 'Dr. Beat Oberholzer',
-      email: 'beat.oberholzer@smartgrid.ch',
+      email: 'beat.oberholzer@klarsolution.com',
       role: 'Lead Auditor',
       status: 'Active',
       lastLogin: '2026-10-24 11:20',
@@ -29,7 +29,7 @@ export const UsersRbacPage: React.FC<{ currentLang?: Language }> = () => {
     {
       id: 'usr-003',
       name: 'Marcelle Dupont',
-      email: 'm.dupont@smartgrid.ch',
+      email: 'm.dupont@klarsolution.com',
       role: 'Finance Manager',
       status: 'Active',
       lastLogin: '2026-10-23 16:05',

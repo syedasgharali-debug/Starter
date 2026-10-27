@@ -113,7 +113,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 klar <span className="text-[#3d9970]">solution</span>
               </span>
               <span className="text-[9px] uppercase tracking-widest text-[#a8cfbd] font-medium">
-                Smart Grid AG
+                KlarSolution AG
               </span>
             </div>
             <span className="hidden md:inline-block px-2.5 py-0.5 rounded-full bg-[#3d9970]/30 text-[#86c8aa] text-[10px] font-extrabold uppercase border border-[#3d9970]/40">
@@ -127,7 +127,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {/* Organization Badge */}
           <div className="hidden sm:flex items-center gap-2 bg-white/10 border border-white/15 px-3 py-1.5 rounded-xl text-xs">
             <Building className="w-3.5 h-3.5 text-[#86c8aa]" />
-            <span className="font-bold text-white">KlarSolution – Smart Grid AG</span>
+            <span className="font-bold text-white">KlarSolution AG</span>
             <span className="text-[10px] text-[#86c8aa] bg-[#3d9970]/40 px-1.5 py-0.5 rounded font-mono font-bold">
               Enterprise
             </span>

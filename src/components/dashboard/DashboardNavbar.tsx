@@ -68,7 +68,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
       }
     } else {
       if (newRole === 'Administrator') {
-        login('Ali Kazmi', 'ali.kazmi@smartgrid.ch', 'Administrator');
+        login('Administrator', 'admin@klarsolution.com', 'Administrator');
       }
     }
   };
@@ -103,7 +103,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
             onChange={(e) => setActiveTenant(e.target.value)}
             className="bg-transparent text-slate-900 font-extrabold text-xs focus:outline-none cursor-pointer pr-1"
           >
-            <option value="Smart Grid AG">Smart Grid AG</option>
+            <option value="KlarSolution AG">KlarSolution AG</option>
             <option value="The DigiXy">The DigiXy</option>
             <option value="AlpenBau Holding AG">AlpenBau Holding AG</option>
           </select>
@@ -158,7 +158,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
                     <span className="text-[10px] text-slate-400">vor 15 Min</span>
                   </div>
                   <p className="text-slate-600 text-[11px]">
-                    Konnektor Smart Grid AG (SAP S/4HANA) bereit.
+                    Konnektor KlarSolution AG (SAP S/4HANA) bereit.
                   </p>
                 </div>
               </div>

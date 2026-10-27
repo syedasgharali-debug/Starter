@@ -45,8 +45,8 @@ const defaultPaymentMethod: PaymentMethod = {
   last4: '4242',
   expiryMonth: '08',
   expiryYear: '2028',
-  cardholderName: 'Ali Kazmi',
-  companyName: 'Smart Grid AG',
+  cardholderName: 'KlarSolution Admin',
+  companyName: 'KlarSolution AG',
   vatId: 'CHE-442.994.102',
 };
 
@@ -212,13 +212,13 @@ export const BillingProvider: React.FC<{ children: ReactNode }> = ({ children })
         <div class="header">
           <div>
             <div class="logo">klar <span>solution</span></div>
-            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #718096; margin-top: 2px;">Smart Grid AG · Schweiz</div>
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #718096; margin-top: 2px;">KlarSolution AG · Schweiz</div>
           </div>
           <div class="company-info">
-            <strong>Smart Grid AG</strong><br>
+            <strong>KlarSolution AG</strong><br>
             In der Au 44, 8706 Meilen<br>
             UID: CHE-442.994.102 MWST<br>
-            kontakt@klarsolution.ch | 044 589 72 88
+            info@klarsolution.com | 044 589 72 88
           </div>
         </div>
 
@@ -277,7 +277,7 @@ export const BillingProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         <div class="footer">
           Vielen Dank für das Vertrauen in KlarSolution. Diese Quittung gilt als berechtigter Vorsteuerabzugsnachweis gemäss Art. 26 MWSTG.<br>
-          Smart Grid AG, In der Au 44, 8706 Meilen, Schweiz.
+          KlarSolution AG, In der Au 44, 8706 Meilen, Schweiz.
         </div>
       </body>
       </html>
